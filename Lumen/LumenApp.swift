@@ -2,7 +2,7 @@
 //  LumenApp.swift
 //  Lumen
 //
-//  Created by Myat Bhone San on 10/18/25.
+//  AI Skincare Assistant
 //
 
 import SwiftUI
@@ -10,9 +10,13 @@ import SwiftData
 
 @main
 struct LumenApp: App {
+    @State private var isOnboardingComplete = false
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            SkinMetric.self,
+            Recommendation.self,
+            UserProfile.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,7 +29,11 @@ struct LumenApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if isOnboardingComplete {
+                MainTabView()
+            } else {
+                OnboardingView(isOnboardingComplete: $isOnboardingComplete)
+            }
         }
         .modelContainer(sharedModelContainer)
     }

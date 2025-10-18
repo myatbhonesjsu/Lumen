@@ -1,0 +1,161 @@
+//
+//  AnalysisProcessingView.swift
+//  Lumen
+//
+//  AI Skincare Assistant - AI Analysis Processing
+//
+
+import SwiftUI
+import SwiftData
+
+struct AnalysisProcessingView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    let image: UIImage
+    @State private var isAnalyzing = true
+    @State private var progress: Double = 0
+    @State private var showResults = false
+    @State private var analysisComplete = false
+
+    var body: some View {
+        ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+
+            VStack(spacing: 32) {
+                Spacer()
+
+                // Image Preview
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 280, height: 350)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
+
+                VStack(spacing: 16) {
+                    if isAnalyzing {
+                        // Progress Indicator
+                        ZStack {
+                            Circle()
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 8)
+                                .frame(width: 60, height: 60)
+
+                            Circle()
+                                .trim(from: 0, to: progress)
+                                .stroke(Color.yellow, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                                .frame(width: 60, height: 60)
+                                .rotationEffect(.degrees(-90))
+                                .animation(.linear(duration: 0.3), value: progress)
+
+                            Image(systemName: "sparkles")
+                                .font(.title3)
+                                .foregroundStyle(.yellow)
+                        }
+
+                        Text("Analyzing your skin...")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+
+                        Text("This may take a few seconds")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.green)
+
+                        Text("Analysis Complete!")
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Button(action: {
+                            showResults = true
+                        }) {
+                            Text("View Results")
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.yellow)
+                                .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 40)
+                    }
+                }
+
+                Spacer()
+
+                if isAnalyzing {
+                    Button(action: { dismiss() }) {
+                        Text("Cancel")
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.bottom, 32)
+                }
+            }
+        }
+        .onAppear {
+            startAnalysis()
+        }
+        .fullScreenCover(isPresented: $showResults) {
+            if let metric = createMockMetric() {
+                AnalysisDetailView(metric: metric)
+            }
+        }
+    }
+
+    private func startAnalysis() {
+        // Simulate AI analysis progress
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
+            if progress < 1.0 {
+                progress += 0.02
+            } else {
+                timer.invalidate()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation {
+                        isAnalyzing = false
+                        analysisComplete = true
+                        saveAnalysis()
+                    }
+                }
+            }
+        }
+    }
+
+    private func saveAnalysis() {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
+
+        let metric = SkinMetric(
+            skinAge: Int.random(in: 25...40),
+            overallHealth: Double.random(in: 45...78),
+            acneLevel: Double.random(in: 20...40),
+            drynessLevel: Double.random(in: 40...65),
+            moistureLevel: Double.random(in: 10...20),
+            pigmentationLevel: Double.random(in: 15...35),
+            imageData: imageData,
+            analysisNotes: "AI analysis completed successfully"
+        )
+
+        modelContext.insert(metric)
+    }
+
+    private func createMockMetric() -> SkinMetric? {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return nil }
+
+        return SkinMetric(
+            skinAge: Int.random(in: 25...40),
+            overallHealth: Double.random(in: 45...78),
+            acneLevel: Double.random(in: 20...40),
+            drynessLevel: Double.random(in: 40...65),
+            moistureLevel: Double.random(in: 10...20),
+            pigmentationLevel: Double.random(in: 15...35),
+            imageData: imageData,
+            analysisNotes: "Your skin shows moderate dryness and some minor acne. Consider using a gentle moisturizer and maintaining a consistent skincare routine."
+        )
+    }
+}
+
+#Preview {
+    AnalysisProcessingView(image: UIImage(systemName: "person.fill")!)
+}
