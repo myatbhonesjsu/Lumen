@@ -93,12 +93,12 @@ struct CustomTabBar: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 28)
+        .padding(.top, 8)
+        .padding(.bottom, 0) // No bottom padding - flush to bottom
         .background(
             Color.white
                 .shadow(color: .black.opacity(0.1), radius: 10, y: -5)
-                .ignoresSafeArea()
+                .ignoresSafeArea(edges: .bottom) // Extend to bottom edge
         )
     }
 }

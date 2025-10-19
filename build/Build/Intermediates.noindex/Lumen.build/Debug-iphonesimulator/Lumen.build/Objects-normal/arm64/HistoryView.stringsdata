@@ -1,0 +1,88 @@
+{
+  "source": "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/History/HistoryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "History",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 57
+        }
+      },
+      {
+        "comment": "",
+        "key": "History",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 35
+        }
+      },
+      {
+        "comment": "",
+        "key": "Average Health",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 107
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 111
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 216
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 222
+        }
+      },
+      {
+        "comment": "",
+        "key": "Skin Age",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 226
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ %lld%%",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 261
+        }
+      },
+      {
+        "comment": "",
+        "key": "No History Yet",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 275
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your skin analysis history will appear here",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 279
+        }
+      }
+    ]
+  },
+  "version": 1
+}

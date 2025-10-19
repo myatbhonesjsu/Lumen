@@ -1,0 +1,104 @@
+{
+  "source": "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Home/ImprovedHomeView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Morning Routine",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 264
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld/%lld completed",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 268
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 287
+        }
+      },
+      {
+        "comment": "",
+        "key": "This Week",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 392
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quick Actions",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 449
+        }
+      },
+      {
+        "comment": "",
+        "key": "Recent Scan",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 519
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 542
+        }
+      },
+      {
+        "comment": "",
+        "key": "Health",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 545
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ %lld%%",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 587
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ready to start?",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 616
+        }
+      },
+      {
+        "comment": "",
+        "key": "Take your first skin analysis to unlock personalized insights",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 620
+        }
+      },
+      {
+        "comment": "",
+        "key": "Take Photo",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 628
+        }
+      }
+    ]
+  },
+  "version": 1
+}

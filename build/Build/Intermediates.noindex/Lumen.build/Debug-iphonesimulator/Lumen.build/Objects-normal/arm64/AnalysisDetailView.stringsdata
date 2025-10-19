@@ -1,0 +1,48 @@
+{
+  "source": "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Analysis/AnalysisDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Skin Age: %lld",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 36
+        }
+      },
+      {
+        "comment": "",
+        "key": "Based on AI analysis",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 40
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI Insights",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 97
+        }
+      },
+      {
+        "comment": "",
+        "key": "View Recommendation",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 129
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 209
+        }
+      }
+    ]
+  },
+  "version": 1
+}
