@@ -16,22 +16,42 @@ struct AnalysisProcessingView: View {
     @State private var progress: Double = 0
     @State private var showResults = false
     @State private var analysisComplete = false
+    @State private var errorMessage: String?
 
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
-                .ignoresSafeArea()
+            LinearGradient(
+                colors: [
+                    Color.appBackground,
+                    Color.brandYellowBackground(opacity: 0.05)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
             VStack(spacing: 32) {
                 Spacer()
 
-                // Image Preview
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 280, height: 350)
-                    .clipShape(RoundedRectangle(cornerRadius: 24))
-                    .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
+                // Image Preview with better styling
+                ZStack {
+                    // Subtle glow effect
+                    RoundedRectangle(cornerRadius: 28)
+                        .fill(Color.yellow.opacity(0.1))
+                        .frame(width: 290, height: 360)
+                        .blur(radius: 20)
+
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 280, height: 350)
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(Color.yellow.opacity(0.3), lineWidth: 2)
+                        )
+                        .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
+                }
 
                 VStack(spacing: 16) {
                     if isAnalyzing {
@@ -53,14 +73,47 @@ struct AnalysisProcessingView: View {
                                 .foregroundStyle(.yellow)
                         }
 
-                        Text("Analyzing your skin...")
+                        Text("Analyzing your skin with AI...")
                             .font(.title3)
                             .fontWeight(.semibold)
 
-                        Text("This may take a few seconds")
+                        Text("Mock Analysis Mode")
                             .font(.subheadline)
                             .foregroundColor(.gray)
+                    } else if let error = errorMessage {
+                        // Error State
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(.orange)
+
+                        Text("Analysis Error")
+                            .font(.title2)
+                            .fontWeight(.bold)
+
+                        Text(error)
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+
+                        Button(action: {
+                            // Retry analysis
+                            errorMessage = nil
+                            isAnalyzing = true
+                            progress = 0
+                            startAnalysis()
+                        }) {
+                            Text("Retry")
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.yellow)
+                                .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 40)
                     } else {
+                        // Success State
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 60))
                             .foregroundStyle(.green)
@@ -99,24 +152,72 @@ struct AnalysisProcessingView: View {
             startAnalysis()
         }
         .fullScreenCover(isPresented: $showResults) {
-            if let metric = createMockMetric() {
+            if let metric = createMetricFromAnalysis() {
                 AnalysisDetailView(metric: metric)
             }
         }
     }
 
     private func startAnalysis() {
-        // Simulate AI analysis progress
+        // Start progress animation
+        startProgressAnimation()
+
+        // Using mock analysis for demonstration
+        print("ℹ️ Running mock skin analysis")
+        useMockAnalysis()
+    }
+
+    private func startProgressAnimation() {
         Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
-            if progress < 1.0 {
-                progress += 0.02
+            if self.progress < 0.95 && self.isAnalyzing {
+                self.progress += 0.01
+            } else if !self.isAnalyzing {
+                timer.invalidate()
+                self.progress = 1.0
+            }
+        }
+    }
+
+    private func completeAnalysis() {
+        progress = 1.0
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            HapticManager.shared.analysisComplete()
+            withAnimation {
+                isAnalyzing = false
+                analysisComplete = true
+                saveAnalysis()
+            }
+        }
+    }
+
+    private func handleAnalysisError(_ error: Error) {
+        progress = 0
+        isAnalyzing = false
+        errorMessage = error.localizedDescription
+
+        // Retry with mock analysis on error
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            print("⚠️ Retrying with mock analysis")
+            self.useMockAnalysis()
+        }
+    }
+
+    private func useMockAnalysis() {
+        // Mock analysis for demonstration
+        isAnalyzing = true
+        errorMessage = nil
+        progress = 0
+
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
+            if self.progress < 1.0 {
+                self.progress += 0.02
             } else {
                 timer.invalidate()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     withAnimation {
-                        isAnalyzing = false
-                        analysisComplete = true
-                        saveAnalysis()
+                        self.isAnalyzing = false
+                        self.analysisComplete = true
+                        self.saveMockAnalysis()
                     }
                 }
             }
@@ -124,6 +225,10 @@ struct AnalysisProcessingView: View {
     }
 
     private func saveAnalysis() {
+        saveMockAnalysis()
+    }
+
+    private func saveMockAnalysis() {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
 
         let metric = SkinMetric(
@@ -134,13 +239,13 @@ struct AnalysisProcessingView: View {
             moistureLevel: Double.random(in: 10...20),
             pigmentationLevel: Double.random(in: 15...35),
             imageData: imageData,
-            analysisNotes: "AI analysis completed successfully"
+            analysisNotes: "Mock analysis for demonstration purposes"
         )
 
         modelContext.insert(metric)
     }
 
-    private func createMockMetric() -> SkinMetric? {
+    private func createMetricFromAnalysis() -> SkinMetric? {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else { return nil }
 
         return SkinMetric(

@@ -57,7 +57,7 @@ struct HistoryView: View {
             .navigationTitle("History")
             .sheet(isPresented: $showDetail) {
                 if let metric = selectedMetric {
-                    AnalysisDetailView(metric: metric)
+                    ImprovedAnalysisDetailView(metric: metric)
                 }
             }
         }
@@ -150,9 +150,9 @@ struct OverviewCard: View {
             }
         }
         .padding(24)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(20)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 
     var scansThisMonth: Int {
@@ -237,9 +237,9 @@ struct HistoryCard: View {
             }
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+        .shadow(color: Color.adaptiveShadow, radius: 5, y: 2)
     }
 
     private func formatDate(_ date: Date) -> String {

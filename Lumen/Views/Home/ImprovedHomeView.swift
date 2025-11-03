@@ -21,7 +21,7 @@ struct ImprovedHomeView: View {
     }
 
     var userName: String {
-        userProfiles.first?.name ?? "there"
+        userProfiles.first?.name ?? "User"
     }
 
     var greeting: String {
@@ -235,9 +235,9 @@ struct QuickStatsCard: View {
             }
         }
         .padding(.vertical, 20)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 
@@ -310,9 +310,9 @@ struct DailyChecklistCard: View {
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 
@@ -426,9 +426,9 @@ struct WeeklyProgressCard: View {
             .frame(height: 120)
         }
         .padding(20)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 
     private func dayLabel(for index: Int) -> String {
@@ -499,9 +499,9 @@ struct QuickActionButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(Color.white)
+            .background(Color.cardBackground)
             .cornerRadius(12)
-            .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+            .shadow(color: Color.adaptiveShadow, radius: 5, y: 2)
         }
     }
 }
@@ -560,9 +560,9 @@ struct RecentAnalysisCard: View {
                 }
             }
             .padding(20)
-            .background(Color.white)
+            .background(Color.cardBackground)
             .cornerRadius(16)
-            .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+            .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
         }
         .buttonStyle(.plain)
     }
@@ -637,9 +637,9 @@ struct EmptyStateCardImproved: View {
         }
         .padding(.vertical, 40)
         .padding(.horizontal, 20)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 

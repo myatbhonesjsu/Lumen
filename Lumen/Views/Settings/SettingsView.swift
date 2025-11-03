@@ -142,6 +142,9 @@ struct SettingsView: View {
                     Text("About")
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                Color.clear.frame(height: 80)
+            }
             .navigationTitle("Settings")
             .onAppear {
                 userName = userProfile?.name ?? "User"
@@ -205,6 +208,9 @@ struct NotificationSettingsView: View {
             } header: {
                 Text("Frequency")
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 80)
         }
         .navigationTitle("Reminder Schedule")
         .navigationBarTitleDisplayMode(.inline)
@@ -271,6 +277,9 @@ struct DataManagementView: View {
                 Text("Privacy")
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 80)
+        }
         .navigationTitle("Data Management")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -316,6 +325,7 @@ struct PrivacyPolicyView: View {
                 )
             }
             .padding(20)
+            .padding(.bottom, 100)
         }
         .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
@@ -389,6 +399,7 @@ struct AboutView: View {
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
+                .padding(.bottom, 100)
 
                 Spacer()
             }

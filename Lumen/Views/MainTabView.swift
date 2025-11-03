@@ -14,7 +14,7 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
-                HomeView()
+                ImprovedHomeView()
                     .tag(0)
 
                 HistoryView()
@@ -50,30 +50,43 @@ struct CustomTabBar: View {
                 title: "Home",
                 isSelected: selectedTab == 0
             ) {
+                HapticManager.shared.tabSelection()
                 selectedTab = 0
             }
 
             TabBarButton(
                 icon: "calendar",
-                title: "Plan",
+                title: "History",
                 isSelected: selectedTab == 1
             ) {
+                HapticManager.shared.tabSelection()
                 selectedTab = 1
             }
 
             // Center Camera Button
-            Button(action: { showCamera = true }) {
+            Button(action: {
+                HapticManager.shared.medium()
+                showCamera = true
+            }) {
                 ZStack {
+                    // Gradient background
                     Circle()
-                        .fill(Color.black)
-                        .frame(width: 60, height: 60)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.yellow, Color.yellow.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 64, height: 64)
+                        .shadow(color: .yellow.opacity(0.4), radius: 10, y: 3)
 
                     Image(systemName: "camera.fill")
-                        .font(.title3)
+                        .font(.title2)
                         .foregroundColor(.white)
                 }
             }
-            .offset(y: -20)
+            .offset(y: -24)
             .frame(maxWidth: .infinity)
 
             TabBarButton(
@@ -81,6 +94,7 @@ struct CustomTabBar: View {
                 title: "Learn",
                 isSelected: selectedTab == 3
             ) {
+                HapticManager.shared.tabSelection()
                 selectedTab = 3
             }
 
@@ -89,16 +103,18 @@ struct CustomTabBar: View {
                 title: "Settings",
                 isSelected: selectedTab == 4
             ) {
+                HapticManager.shared.tabSelection()
                 selectedTab = 4
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .padding(.bottom, 0) // No bottom padding - flush to bottom
+        .padding(.horizontal, 8)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
         .background(
-            Color.white
-                .shadow(color: .black.opacity(0.1), radius: 10, y: -5)
-                .ignoresSafeArea(edges: .bottom) // Extend to bottom edge
+            Rectangle()
+                .fill(Color.cardBackground)
+                .shadow(color: Color.adaptiveShadow, radius: 8, y: -2)
+                .ignoresSafeArea(edges: .bottom)
         )
     }
 }
@@ -111,17 +127,20 @@ struct TabBarButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
+            VStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(isSelected ? .yellow : .gray)
+                    .font(.system(size: 22))
+                    .foregroundColor(isSelected ? .yellow : .gray.opacity(0.6))
+                    .scaleEffect(isSelected ? 1.1 : 1.0)
 
                 Text(title)
-                    .font(.caption2)
-                    .foregroundColor(isSelected ? .yellow : .gray)
+                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .yellow : .gray.opacity(0.6))
             }
             .frame(maxWidth: .infinity)
+            .frame(height: 60)
         }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
     }
 }
 

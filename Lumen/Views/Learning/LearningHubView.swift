@@ -356,7 +356,7 @@ struct ArticleCard: View {
             Spacer()
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
     }
@@ -413,7 +413,7 @@ struct ArticleDetailView: View {
                         .lineSpacing(6)
                         .padding(.horizontal, 20)
 
-                    Spacer(minLength: 40)
+                    Spacer(minLength: 100)
                 }
             }
             .background(Color(.systemGroupedBackground))

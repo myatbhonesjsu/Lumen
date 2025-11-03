@@ -84,7 +84,7 @@ struct ImprovedAnalysisDetailView: View {
                     }
                     .padding(.top, 16)
                 }
-                .background(Color(.systemGroupedBackground))
+                .background(Color.appBackground)
 
                 // Close Button
                 Button(action: { dismiss() }) {
@@ -214,7 +214,7 @@ struct TabSelector: View {
                 }
             }
         }
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
     }
@@ -274,9 +274,9 @@ struct ScoreCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 32)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 
@@ -345,7 +345,7 @@ struct PriorityCard: View {
             Spacer()
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
     }
@@ -402,9 +402,9 @@ struct DoTodaySection: View {
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 
@@ -440,9 +440,9 @@ struct AllMetricsSection: View {
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 
@@ -523,9 +523,9 @@ struct AIInsightsSection: View {
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(Color.cardBackground)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 
