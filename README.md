@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
 </p>
 
-## 📱 Overview
+##  Overview
 
 **Lumen** is a privacy-first AI skincare assistant that helps users analyze their skin health through photos, track progress over time, and receive personalized skincare recommendations powered by advanced AI agents with tool calling and RAG (Retrieval Augmented Generation).
 
@@ -19,7 +19,7 @@
 -  **Amazon Integration**: Direct purchase links for recommended products
 -  **AWS Backend**: Production infrastructure with S3, Lambda, DynamoDB, Bedrock (NEW!)
 
-## ✨ Features
+##  Features
 
 ### Core Functionality
 -  **Photo Capture & Analysis** - Take selfies with guided camera interface and face positioning guide
