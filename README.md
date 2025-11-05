@@ -11,35 +11,35 @@
 
 **Lumen** is a privacy-first AI skincare assistant that helps users analyze their skin health through photos, track progress over time, and receive personalized skincare recommendations powered by advanced AI agents with tool calling and RAG (Retrieval Augmented Generation).
 
-**Current Status**: ✅ Production-ready with real AI integration + AWS backend:
-- 🤖 **Hugging Face**: Fast skin condition detection
-- 🧠 **Google Gemini / AWS Bedrock**: Enhanced analysis with condition-specific recommendations
-- 🛠️ **AI Agents**: Tool calling for intelligent product recommendations
-- 📦 **Vector Database**: RAG-based semantic product search (mock + AWS OpenSearch)
-- 🔗 **Amazon Integration**: Direct purchase links for recommended products
-- ☁️ **AWS Backend**: Production infrastructure with S3, Lambda, DynamoDB, Bedrock (NEW!)
+
+-  **Hugging Face**: Fast skin condition detection
+-  **Google Gemini / AWS Bedrock**: Enhanced analysis with condition-specific recommendations
+-  **AI Agents**: Tool calling for intelligent product recommendations
+-  **Vector Database**: RAG-based semantic product search (mock + AWS OpenSearch)
+-  **Amazon Integration**: Direct purchase links for recommended products
+-  **AWS Backend**: Production infrastructure with S3, Lambda, DynamoDB, Bedrock (NEW!)
 
 ## ✨ Features
 
 ### Core Functionality
-- 📸 **Photo Capture & Analysis** - Take selfies with guided camera interface and face positioning guide
-- 🧠 **Real AI Skin Analysis** - Two-stage AI pipeline:
+-  **Photo Capture & Analysis** - Take selfies with guided camera interface and face positioning guide
+-  **Real AI Skin Analysis** - Two-stage AI pipeline:
   - **Stage 1**: Hugging Face skin condition detection (2-3s)
   - **Stage 2**: Google Gemini enhanced analysis (3-5s)
-- 🤖 **AI Agent with Tool Calling** - Intelligent product recommendations using:
+-  **AI Agent with Tool Calling** - Intelligent product recommendations using:
   - Function calling to search product database
   - RAG (Retrieval Augmented Generation) with vector search
   - Semantic similarity matching for relevant products
-- 📊 **Progress Tracking** - Visual timeline of skin health over time
-- 🛍️ **Product Recommendations** - Curated skincare products with:
+-  **Progress Tracking** - Visual timeline of skin health over time
+-  **Product Recommendations** - Curated skincare products with:
   - Amazon purchase links
   - Real ratings & reviews
   - Condition-specific targeting
   - Price information
-- 📚 **Educational Content** - Learn about skincare with evidence-based articles
-- 🔒 **Privacy-First** - All data stored locally, no cloud sync
-- 🌓 **Dark Mode Support** - Adaptive colors for light and dark mode
-- 📳 **Haptic Feedback** - Tactile responses for better UX
+-  **Educational Content** - Learn about skincare with evidence-based articles
+-  **Privacy-First** - All data stored locally, no cloud sync
+-  **Dark Mode Support** - Adaptive colors for light and dark mode
+-  **Haptic Feedback** - Tactile responses for better UX
 
 ### Key Screens
 1. **Onboarding** - Privacy-forward introduction to the app
@@ -51,7 +51,7 @@
 7. **Learning Hub** - Skincare education articles
 8. **Settings** - Privacy controls and preferences
 
-## 🎨 Design
+##  Design
 
 ### Design Philosophy
 - **Clean & Minimal** - Card-based layout with ample whitespace
@@ -70,7 +70,7 @@
 - Warning: Orange
 - Error: Red
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Technology Stack
 
@@ -142,7 +142,7 @@ User preferences and settings:
 - `scanRemindersEnabled`: Notification preferences
 - `privacySettingsAccepted`: Privacy consent
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Xcode 16.0+
@@ -178,12 +178,12 @@ cd aws-backend
 **Time**: ~7 minutes | **Cost**: ~$19/month (10K users)
 
 **What it deploys**:
-- ✅ S3 bucket for image storage
-- ✅ Lambda function for AI processing
-- ✅ API Gateway for REST endpoints
-- ✅ DynamoDB for results & products
-- ✅ CloudWatch for monitoring
-- ✅ (Optional) AWS Bedrock Agents for managed AI framework
+-  S3 bucket for image storage
+-  Lambda function for AI processing
+-  API Gateway for REST endpoints
+-  DynamoDB for results & products
+-  CloudWatch for monitoring
+-  (Optional) AWS Bedrock Agents for managed AI framework
 
 **After deployment**:
 1. Copy API endpoint URL from output
@@ -195,18 +195,18 @@ cd aws-backend
 4. Replace analysis service call (see integration guide)
 
 **Full documentation**:
-- 📖 `aws-backend/README.md` - Complete 500+ line guide
-- ⚡ `aws-backend/QUICK_DEPLOY.md` - Quick reference
-- 🏗️ `AWS_ARCHITECTURE.md` - Architecture deep dive
-- 🤔 `ARCHITECTURE_DECISION.md` - Client vs AWS comparison
+-  `aws-backend/README.md` - Complete 500+ line guide
+-  `aws-backend/QUICK_DEPLOY.md` - Quick reference
+-  `AWS_ARCHITECTURE.md` - Architecture deep dive
+-  `ARCHITECTURE_DECISION.md` - Client vs AWS comparison
 
 **Why use AWS backend?**
-- ✅ API keys secure on backend (not in app)
-- ✅ Scales to millions of users
-- ✅ Update AI logic without app release
-- ✅ Full analytics & monitoring
-- ✅ AWS Bedrock Agents = managed agentic framework
-- ✅ Production-grade infrastructure
+-  API keys secure on backend (not in app)
+-  Scales to millions of users
+-  Update AI logic without app release
+-  Full analytics & monitoring
+-  AWS Bedrock Agents = managed agentic framework
+-  Production-grade infrastructure
 
 ### Camera Permissions
 The app requires camera and photo library access. Privacy descriptions are configured in the project settings:
@@ -251,14 +251,14 @@ The app requires camera and photo library access. Privacy descriptions are confi
    - View history timeline with all past analyses
    - Compare before/after photos
 
-## 🔐 Privacy & Security
+##  Privacy & Security
 
 ### Privacy-First Design
-- ✅ **Local Storage Only** - All data stored on device using SwiftData
-- ✅ **No Account Required** - Use immediately without signup
-- ✅ **No Cloud Sync** - Photos never leave your device
-- ✅ **No Third-Party Sharing** - Zero data sharing
-- ✅ **Easy Data Deletion** - Delete all data anytime from Settings
+-  **Local Storage Only** - All data stored on device using SwiftData
+-  **No Account Required** - Use immediately without signup
+-  **No Cloud Sync** - Photos never leave your device
+-  **No Third-Party Sharing** - Zero data sharing
+-  **Easy Data Deletion** - Delete all data anytime from Settings
 
 ### Data Storage
 - Photos: Stored as `Data` in SwiftData (encrypted at rest by iOS)
@@ -267,7 +267,7 @@ The app requires camera and photo library access. Privacy descriptions are confi
 - No network requests (current implementation uses mock data)
 - All processing happens on-device
 
-## 🧪 Testing
+##  Testing
 
 ### Running Tests
 
@@ -291,19 +291,19 @@ xcodebuild test -project Lumen.xcodeproj -scheme Lumen -destination 'platform=iO
 - [ ] Camera integration tests
 - [ ] Analysis processing tests
 
-## 🎯 Roadmap
+##  Roadmap
 
-### Current Version (1.0.0) - ✅ Complete
-- ✅ Complete UI implementation with polished design
-- ✅ Mock AI analysis with realistic data
-- ✅ Local data storage with SwiftData
-- ✅ Privacy-first design philosophy
-- ✅ Camera capture with thread-safe implementation
-- ✅ Face positioning guide for photos
-- ✅ Dark mode support with adaptive colors
-- ✅ Haptic feedback throughout app
-- ✅ Beautiful analysis animations
-- ✅ History tracking and progress visualization
+### Current Version (1.0.0) -  Complete
+-  Complete UI implementation with polished design
+-  Mock AI analysis with realistic data
+-  Local data storage with SwiftData
+-  Privacy-first design philosophy
+-  Camera capture with thread-safe implementation
+-  Face positioning guide for photos
+-  Dark mode support with adaptive colors
+-  Haptic feedback throughout app
+-  Beautiful analysis animations
+-  History tracking and progress visualization
 
 ### Future Enhancements
 - [ ] Real AI/ML model integration (Core ML or third-party SDK)
@@ -318,11 +318,11 @@ xcodebuild test -project Lumen.xcodeproj -scheme Lumen -destination 'platform=iO
 - [ ] Watch app companion
 - [ ] Push notifications for scan reminders
 
-## 📚 Documentation
+##  Documentation
 
 - **[CLAUDE.md](CLAUDE.md)** - Development setup and architecture notes for AI assistant
 
-## 🤝 Contributing
+##  Contributing
 
 ### Development Guidelines
 1. Follow SwiftUI best practices
@@ -338,27 +338,27 @@ xcodebuild test -project Lumen.xcodeproj -scheme Lumen -destination 'platform=iO
 - Keep views small and focused
 - Extract reusable components
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 👥 Authors
+##  Authors
 
 **Team 10** - CMPE 272 Project
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Design inspiration from modern skincare apps
 - SF Symbols for iconography
 - SwiftUI community for best practices
 
-## 📞 Support
+##  Support
 
 For questions or issues:
 - Create an issue in this repository
 - Documentation: See CLAUDE.md for development setup
 
-## 🔄 Version History
+##  Version History
 
 ### 1.0.0 (November 2024)
 - Initial release with full UI/UX implementation
@@ -369,11 +369,11 @@ For questions or issues:
 - Haptic feedback system
 - Face positioning guide for camera
 - Mock AI analysis with realistic data
-- Build status: ✅ **BUILD SUCCEEDED**
+- Build status:  **BUILD SUCCEEDED**
 
 ---
 
-## ⚙️ Technical Highlights
+##  Technical Highlights
 
 ### Camera Implementation
 - **Thread-safe**: All camera operations on dedicated queue
