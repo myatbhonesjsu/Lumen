@@ -1,5 +1,7 @@
 # Lumen - AI Skincare Assistant
 
+### Team Derma: Myat Bhone San, Ray Zhao, Shefali Saini, Sriyavarma Saripella
+
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-iOS%2018.6+-blue.svg" alt="Platform">
   <img src="https://img.shields.io/badge/Swift-5.0-orange.svg" alt="Swift">
