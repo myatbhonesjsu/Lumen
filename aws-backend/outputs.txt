@@ -1,0 +1,26 @@
+account_id = "761018878812"
+api_endpoint = "https://ocbpgt6ebc.execute-api.us-east-1.amazonaws.com/dev/"
+api_gateway_id = "ocbpgt6ebc"
+api_gateway_url = "https://ocbpgt6ebc.execute-api.us-east-1.amazonaws.com/dev"
+dynamodb_analyses_table = "lumen-skincare-dev-analyses"
+dynamodb_products_table = "lumen-skincare-dev-products"
+lambda_function = "lumen-skincare-dev-analyze-skin"
+lambda_function_arn = "arn:aws:lambda:us-east-1:761018878812:function:lumen-skincare-dev-analyze-skin"
+lambda_function_name = "lumen-skincare-dev-analyze-skin"
+next_steps = <<EOT
+    
+✅ Infrastructure deployed successfully!
+    
+Next steps:
+1. Create Bedrock Agent in AWS Console
+2. Update Lambda environment variable BEDROCK_AGENT_ID
+3. Load products into DynamoDB: npm run load-products
+4. Test API: curl https://ocbpgt6ebc.execute-api.us-east-1.amazonaws.com/dev/upload-image
+5. Update iOS app with API endpoint: https://ocbpgt6ebc.execute-api.us-east-1.amazonaws.com/dev
+    
+See aws-backend/README.md for detailed instructions.
+
+EOT
+region = "us-east-1"
+s3_bucket_images = "lumen-skincare-dev-images"
+s3_bucket_name = "lumen-skincare-dev-images"

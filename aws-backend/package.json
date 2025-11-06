@@ -1,0 +1,23 @@
+{
+  "name": "lumen-aws-backend",
+  "version": "1.0.0",
+  "description": "AWS backend for Lumen AI Skincare Assistant",
+  "scripts": {
+    "deploy": "bash deploy.sh",
+    "build-lambda": "bash scripts/build-lambda.sh",
+    "load-products": "node scripts/load-products.js",
+    "destroy": "cd terraform && terraform destroy"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1692.0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "terraform",
+    "skincare",
+    "ai"
+  ],
+  "author": "Lumen Team",
+  "license": "MIT"
+}

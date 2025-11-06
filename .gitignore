@@ -167,3 +167,11 @@ ENV/
 *.tar.gz
 *.rar
 *.7z
+
+## Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfplan
+tfplan
