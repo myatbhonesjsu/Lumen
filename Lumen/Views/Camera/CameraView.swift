@@ -10,13 +10,21 @@ import AVFoundation
 import PhotosUI
 import Combine
 
+// Wrapper to make UIImage identifiable for sheet presentation
+struct AnalysisImageItem: Identifiable {
+    let id = UUID()
+    let image: UIImage
+}
+
 struct CameraView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @StateObject private var cameraManager = CameraManager()
     @State private var selectedItem: PhotosPickerItem?
-    @State private var showAnalysis = false
-    @State private var capturedImage: UIImage?
+    @State private var analysisImageItem: AnalysisImageItem?
+    @State private var analysisResult: AnalysisResult?
+    @State private var analysisError: Error?
+    @State private var progressMessage: String = ""
 
     var body: some View {
         ZStack {
@@ -183,23 +191,47 @@ struct CameraView: View {
             }
         }
         .onAppear {
+            // Reset analysis state for new session
+            analysisResult = nil
+            analysisError = nil
+            analysisImageItem = nil
+            progressMessage = ""
+
             cameraManager.checkPermission()
             cameraManager.startSession()
         }
         .onDisappear {
             cameraManager.stopSession()
+            // Reset state when leaving
+            analysisResult = nil
+            analysisError = nil
+            analysisImageItem = nil
         }
         .onChange(of: selectedItem) { _, newValue in
             Task {
                 if let data = try? await newValue?.loadTransferable(type: Data.self),
                    let image = UIImage(data: data) {
-                    processImage(image)
+                    // IMPORTANT: Ensure we're on main thread before calling processImage
+                    await MainActor.run {
+                        self.processImage(image)
+                    }
                 }
             }
         }
-        .sheet(isPresented: $showAnalysis) {
-            if let image = capturedImage {
-                AnalysisProcessingView(image: image)
+        .sheet(item: $analysisImageItem) { imageItem in
+            NavigationStack {
+                AnalysisProcessingView(
+                    image: imageItem.image,
+                    analysisResult: $analysisResult,
+                    analysisError: $analysisError,
+                    progressMessage: $progressMessage,
+                    onDismiss: {
+                        analysisImageItem = nil
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            dismiss()
+                        }
+                    }
+                )
             }
         }
     }
@@ -208,15 +240,53 @@ struct CameraView: View {
         HapticManager.shared.photoCapture()
         cameraManager.capturePhoto { image in
             if let image = image {
-                processImage(image)
+                // IMPORTANT: Ensure we're on main thread before calling processImage
+                DispatchQueue.main.async {
+                    self.processImage(image)
+                }
             }
         }
     }
 
     private func processImage(_ image: UIImage) {
-        capturedImage = image
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async {
+                self.processImage(image)
+            }
+            return
+        }
+
+        // Reset state
+        self.analysisResult = nil
+        self.analysisError = nil
+        self.progressMessage = "Preparing..."
+
+        // Create image item and present sheet
+        self.analysisImageItem = AnalysisImageItem(image: image)
         HapticManager.shared.success()
-        showAnalysis = true
+
+        // Start analysis
+        SkinAnalysisService.shared.analyzeSkin(
+            image: image,
+            onProgress: { message in
+                DispatchQueue.main.async {
+                    self.progressMessage = message
+                }
+            },
+            completion: { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let analysis):
+                        self.analysisResult = analysis
+                        HapticManager.shared.analysisComplete()
+
+                    case .failure(let error):
+                        self.analysisError = error
+                        HapticManager.shared.error()
+                    }
+                }
+            }
+        )
     }
 }
 

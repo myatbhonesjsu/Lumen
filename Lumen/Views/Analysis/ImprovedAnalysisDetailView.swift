@@ -247,13 +247,13 @@ struct ScoreCard: View {
     var healthStatus: (emoji: String, title: String, color: Color) {
         switch metric.overallHealth {
         case 80...:
-            return ("😊", "Excellent", .green)
+            return ("", "Excellent", .green)
         case 60..<80:
-            return ("🙂", "Good", .yellow)
+            return ("", "Good", .yellow)
         case 40..<60:
-            return ("😐", "Fair", .orange)
+            return ("", "Fair", .orange)
         default:
-            return ("☹️", "Needs Attention", .red)
+            return ("", "Needs Attention", .red)
         }
     }
 
@@ -477,7 +477,7 @@ struct MetricBadge: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
-        .background(Color.gray.opacity(0.05))
+        .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(12)
     }
 }

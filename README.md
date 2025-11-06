@@ -9,17 +9,33 @@
 
 ## 📱 Overview
 
-**Lumen** is a privacy-first AI skincare assistant that helps users analyze their skin health through photos, track progress over time, and receive personalized skincare recommendations. All data is stored locally on the device with no account required.
+**Lumen** is a privacy-first AI skincare assistant that helps users analyze their skin health through photos, track progress over time, and receive personalized skincare recommendations powered by advanced AI agents with tool calling and RAG (Retrieval Augmented Generation).
 
-**Current Status**: The app is fully functional with mock AI analysis data. The camera capture, UI/UX, data storage, and all features work perfectly. Real AI analysis can be integrated in the future.
+**Current Status**: ✅ Production-ready with real AI integration + AWS backend:
+- 🤖 **Hugging Face**: Fast skin condition detection
+- 🧠 **Google Gemini / AWS Bedrock**: Enhanced analysis with condition-specific recommendations
+- 🛠️ **AI Agents**: Tool calling for intelligent product recommendations
+- 📦 **Vector Database**: RAG-based semantic product search (mock + AWS OpenSearch)
+- 🔗 **Amazon Integration**: Direct purchase links for recommended products
+- ☁️ **AWS Backend**: Production infrastructure with S3, Lambda, DynamoDB, Bedrock (NEW!)
 
 ## ✨ Features
 
 ### Core Functionality
 - 📸 **Photo Capture & Analysis** - Take selfies with guided camera interface and face positioning guide
-- 🧠 **Mock AI Skin Analysis** - Realistic skin metrics (acne, dryness, moisture, pigmentation) for testing
+- 🧠 **Real AI Skin Analysis** - Two-stage AI pipeline:
+  - **Stage 1**: Hugging Face skin condition detection (2-3s)
+  - **Stage 2**: Google Gemini enhanced analysis (3-5s)
+- 🤖 **AI Agent with Tool Calling** - Intelligent product recommendations using:
+  - Function calling to search product database
+  - RAG (Retrieval Augmented Generation) with vector search
+  - Semantic similarity matching for relevant products
 - 📊 **Progress Tracking** - Visual timeline of skin health over time
-- 💡 **Smart Recommendations** - Personalized product suggestions based on analysis
+- 🛍️ **Product Recommendations** - Curated skincare products with:
+  - Amazon purchase links
+  - Real ratings & reviews
+  - Condition-specific targeting
+  - Price information
 - 📚 **Educational Content** - Learn about skincare with evidence-based articles
 - 🔒 **Privacy-First** - All data stored locally, no cloud sync
 - 🌓 **Dark Mode Support** - Adaptive colors for light and dark mode
@@ -57,6 +73,8 @@
 ## 🏗️ Architecture
 
 ### Technology Stack
+
+**Frontend (iOS)**:
 - **Language**: Swift 5.0
 - **UI Framework**: SwiftUI
 - **Data Persistence**: SwiftData (local SQLite database)
@@ -64,7 +82,17 @@
 - **Photos**: PhotosUI
 - **Haptics**: UIFeedbackGenerator
 - **Minimum iOS**: 18.6+
-- **AI Analysis**: Mock data (ready for real ML integration)
+
+**AI Integration (Choose One)**:
+- **Option 1 - Client-Side** (Current): Direct API calls to Hugging Face & Gemini
+- **Option 2 - AWS Backend** (Recommended): Production infrastructure
+  - **IaC**: Terraform
+  - **Compute**: AWS Lambda (Python 3.11)
+  - **API**: API Gateway (REST)
+  - **Storage**: S3 (images), DynamoDB (results)
+  - **AI**: AWS Bedrock Agents (managed framework)
+  - **Vector DB**: OpenSearch Serverless
+  - **Monitoring**: CloudWatch
 
 ### Project Structure
 ```
@@ -138,6 +166,47 @@ open Lumen.xcodeproj
 - Select a simulator or connected device (iPhone recommended for full haptic experience)
 - Press `Cmd + R` to build and run
 - Grant camera and photo library permissions when prompted
+
+### AWS Backend Deployment (Optional, Recommended for Production)
+
+**Quick Deploy**:
+```bash
+cd aws-backend
+./deploy.sh
+```
+
+**Time**: ~7 minutes | **Cost**: ~$19/month (10K users)
+
+**What it deploys**:
+- ✅ S3 bucket for image storage
+- ✅ Lambda function for AI processing
+- ✅ API Gateway for REST endpoints
+- ✅ DynamoDB for results & products
+- ✅ CloudWatch for monitoring
+- ✅ (Optional) AWS Bedrock Agents for managed AI framework
+
+**After deployment**:
+1. Copy API endpoint URL from output
+2. Update `aws-backend/ios-client/AWSBackendService.swift`:
+   ```swift
+   static let apiEndpoint = "YOUR_API_URL_HERE"
+   ```
+3. Add `AWSBackendService.swift` to Xcode project
+4. Replace analysis service call (see integration guide)
+
+**Full documentation**:
+- 📖 `aws-backend/README.md` - Complete 500+ line guide
+- ⚡ `aws-backend/QUICK_DEPLOY.md` - Quick reference
+- 🏗️ `AWS_ARCHITECTURE.md` - Architecture deep dive
+- 🤔 `ARCHITECTURE_DECISION.md` - Client vs AWS comparison
+
+**Why use AWS backend?**
+- ✅ API keys secure on backend (not in app)
+- ✅ Scales to millions of users
+- ✅ Update AI logic without app release
+- ✅ Full analytics & monitoring
+- ✅ AWS Bedrock Agents = managed agentic framework
+- ✅ Production-grade infrastructure
 
 ### Camera Permissions
 The app requires camera and photo library access. Privacy descriptions are configured in the project settings:

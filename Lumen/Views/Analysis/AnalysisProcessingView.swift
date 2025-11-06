@@ -2,265 +2,392 @@
 //  AnalysisProcessingView.swift
 //  Lumen
 //
-//  AI Skincare Assistant - AI Analysis Processing
+//  Simplified view showing AWS analysis results
 //
 
 import SwiftUI
 import SwiftData
+import Combine
 
 struct AnalysisProcessingView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+
     let image: UIImage
-    @State private var isAnalyzing = true
-    @State private var progress: Double = 0
-    @State private var showResults = false
-    @State private var analysisComplete = false
-    @State private var errorMessage: String?
+    @Binding var analysisResult: AnalysisResult?
+    @Binding var analysisError: Error?
+    @Binding var progressMessage: String
+
+    let onDismiss: () -> Void
+
+    var topConditions: [(String, Double)] {
+        guard let result = analysisResult else { return [] }
+
+        // Filter out the primary condition and sort by confidence
+        let otherConditions = result.allConditions
+            .filter { $0.key != result.condition }
+            .sorted { $0.value > $1.value }
+            .prefix(3)
+            .filter { $0.value >= 0.3 }
+
+        return Array(otherConditions)
+    }
 
     var body: some View {
         ZStack {
+            // Background
             LinearGradient(
-                colors: [
-                    Color.appBackground,
-                    Color.brandYellowBackground(opacity: 0.05)
-                ],
+                colors: [Color.appBackground, Color.brandYellowBackground(opacity: 0.05)],
                 startPoint: .top,
                 endPoint: .bottom
             )
             .ignoresSafeArea()
 
-            VStack(spacing: 32) {
-                Spacer()
+            VStack(spacing: 24) {
+                // Header with dismiss button
+                HStack {
+                    Text("Skin Analysis")
+                        .font(.title2)
+                        .fontWeight(.bold)
 
-                // Image Preview with better styling
-                ZStack {
-                    // Subtle glow effect
-                    RoundedRectangle(cornerRadius: 28)
-                        .fill(Color.yellow.opacity(0.1))
-                        .frame(width: 290, height: 360)
-                        .blur(radius: 20)
+                    Spacer()
 
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 280, height: 350)
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24)
-                                .stroke(Color.yellow.opacity(0.3), lineWidth: 2)
-                        )
-                        .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
-                }
-
-                VStack(spacing: 16) {
-                    if isAnalyzing {
-                        // Progress Indicator
-                        ZStack {
-                            Circle()
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 8)
-                                .frame(width: 60, height: 60)
-
-                            Circle()
-                                .trim(from: 0, to: progress)
-                                .stroke(Color.yellow, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                                .frame(width: 60, height: 60)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.linear(duration: 0.3), value: progress)
-
-                            Image(systemName: "sparkles")
-                                .font(.title3)
-                                .foregroundStyle(.yellow)
-                        }
-
-                        Text("Analyzing your skin with AI...")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-
-                        Text("Mock Analysis Mode")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    } else if let error = errorMessage {
-                        // Error State
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.orange)
-
-                        Text("Analysis Error")
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
                             .font(.title2)
-                            .fontWeight(.bold)
-
-                        Text(error)
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
-
-                        Button(action: {
-                            // Retry analysis
-                            errorMessage = nil
-                            isAnalyzing = true
-                            progress = 0
-                            startAnalysis()
-                        }) {
-                            Text("Retry")
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.yellow)
-                                .cornerRadius(12)
-                        }
-                        .padding(.horizontal, 40)
-                    } else {
-                        // Success State
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(.green)
-
-                        Text("Analysis Complete!")
-                            .font(.title2)
-                            .fontWeight(.bold)
-
-                        Button(action: {
-                            showResults = true
-                        }) {
-                            Text("View Results")
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.yellow)
-                                .cornerRadius(12)
-                        }
-                        .padding(.horizontal, 40)
+                            .foregroundColor(.secondary)
                     }
+                }
+                .padding(.horizontal)
+                .padding(.top)
+
+                // Image preview
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
+                    .padding(.horizontal)
+
+                // Content
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if let error = analysisError {
+                            errorView(error: error)
+                        } else if let result = analysisResult {
+                            resultsView(result: result)
+                        } else {
+                            loadingView()
+                        }
+                    }
+                    .padding(.horizontal)
                 }
 
                 Spacer()
+            }
+        }
+    }
 
-                if isAnalyzing {
-                    Button(action: { dismiss() }) {
-                        Text("Cancel")
-                            .foregroundColor(.gray)
-                    }
-                    .padding(.bottom, 32)
+    // MARK: - Loading View
+
+    @ViewBuilder
+    private func loadingView() -> some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .yellow))
+                .scaleEffect(2.0)
+                .frame(height: 60)
+
+            VStack(spacing: 8) {
+                Text("Analyzing with AI...")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                if !progressMessage.isEmpty {
+                    AnimatedDotsText(baseText: progressMessage)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
                 }
             }
         }
-        .onAppear {
-            startAnalysis()
-        }
-        .fullScreenCover(isPresented: $showResults) {
-            if let metric = createMetricFromAnalysis() {
-                AnalysisDetailView(metric: metric)
+        .padding()
+    }
+
+    // MARK: - Results View
+
+    @ViewBuilder
+    private func resultsView(result: AnalysisResult) -> some View {
+        VStack(spacing: 24) {
+            // Success icon
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 60))
+                .foregroundStyle(.green)
+                .symbolEffect(.bounce, value: result)
+
+            // Condition detected
+            VStack(spacing: 8) {
+                Text("Primary Condition")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+
+                Text(result.condition.replacingOccurrences(of: "_", with: " ").capitalized)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .multilineTextAlignment(.center)
+
+                Text("\(Int(result.confidence * 100))% Confidence")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
-        }
-    }
 
-    private func startAnalysis() {
-        // Start progress animation
-        startProgressAnimation()
+            // AI Summary
+            if let summary = result.summary {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.yellow)
+                        Text("AI Analysis")
+                            .font(.headline)
+                    }
 
-        // Using mock analysis for demonstration
-        print("ℹ️ Running mock skin analysis")
-        useMockAnalysis()
-    }
-
-    private func startProgressAnimation() {
-        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
-            if self.progress < 0.95 && self.isAnalyzing {
-                self.progress += 0.01
-            } else if !self.isAnalyzing {
-                timer.invalidate()
-                self.progress = 1.0
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(16)
+                .background(Color.yellow.opacity(0.1))
+                .cornerRadius(12)
+                .padding(.horizontal)
             }
-        }
-    }
 
-    private func completeAnalysis() {
-        progress = 1.0
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            HapticManager.shared.analysisComplete()
-            withAnimation {
-                isAnalyzing = false
-                analysisComplete = true
-                saveAnalysis()
+            // Other detected conditions
+            if !topConditions.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Other Detected Conditions")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    ForEach(topConditions, id: \.0) { condition, confidence in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(condition.replacingOccurrences(of: "_", with: " ").capitalized)
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+
+                                ProgressView(value: confidence)
+                                    .tint(confidenceColor(for: confidence))
+                            }
+
+                            Spacer()
+
+                            Text("\(Int(confidence * 100))%")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical, 8)
             }
+
+            // Product recommendations
+            if !result.products.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Recommended Products")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    ForEach(Array(result.products.prefix(3).enumerated()), id: \.offset) { _, product in
+                        productCard(product: product)
+                    }
+                }
+            }
+
+            // Save button
+            Button(action: {
+                saveAnalysis(result: result)
+                onDismiss()
+            }) {
+                Text("Save Analysis")
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.yellow)
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal)
         }
+        .padding(.vertical)
     }
 
-    private func handleAnalysisError(_ error: Error) {
-        progress = 0
-        isAnalyzing = false
-        errorMessage = error.localizedDescription
+    @ViewBuilder
+    private func productCard(product: AnalysisResult.Product) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(product.name)
+                        .font(.headline)
+                        .lineLimit(2)
 
-        // Retry with mock analysis on error
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            print("⚠️ Retrying with mock analysis")
-            self.useMockAnalysis()
-        }
-    }
+                    Text(product.brand)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
 
-    private func useMockAnalysis() {
-        // Mock analysis for demonstration
-        isAnalyzing = true
-        errorMessage = nil
-        progress = 0
+                Spacer()
 
-        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
-            if self.progress < 1.0 {
-                self.progress += 0.02
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .font(.caption)
+                            .foregroundColor(.yellow)
+                        Text(String(format: "%.1f", product.rating))
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+
+                    Text(product.priceRange)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Text(product.description)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+
+            if let url = URL(string: product.amazonUrl), url.scheme != nil {
+                Button(action: {
+                    UIApplication.shared.open(url)
+                }) {
+                    HStack {
+                        Text("View on Amazon")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(.blue)
+                }
+                #if DEBUG
+                .onAppear {
+                    print("[ProductCard] Valid URL: \(url.absoluteString)")
+                }
+                #endif
             } else {
-                timer.invalidate()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    withAnimation {
-                        self.isAnalyzing = false
-                        self.analysisComplete = true
-                        self.saveMockAnalysis()
+                Text("URL unavailable: \(product.amazonUrl)")
+                    .font(.caption2)
+                    .foregroundColor(.red)
+                #if DEBUG
+                    .onAppear {
+                        print("[ProductCard] Invalid URL: '\(product.amazonUrl)'")
                     }
-                }
+                #endif
             }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+
+    private func confidenceColor(for confidence: Double) -> Color {
+        if confidence >= 0.7 {
+            return .green
+        } else if confidence >= 0.5 {
+            return .yellow
+        } else {
+            return .orange
         }
     }
 
-    private func saveAnalysis() {
-        saveMockAnalysis()
+    // MARK: - Error View
+
+    @ViewBuilder
+    private func errorView(error: Error) -> some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 60))
+                .foregroundStyle(.red)
+
+            VStack(spacing: 8) {
+                Text("Analysis Failed")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                Text(error.localizedDescription)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(action: onDismiss) {
+                Text("Try Again")
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red)
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal)
+        }
+        .padding()
     }
 
-    private func saveMockAnalysis() {
+    // MARK: - Save Analysis
+
+    private func saveAnalysis(result: AnalysisResult) {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
 
         let metric = SkinMetric(
-            skinAge: Int.random(in: 25...40),
-            overallHealth: Double.random(in: 45...78),
-            acneLevel: Double.random(in: 20...40),
-            drynessLevel: Double.random(in: 40...65),
-            moistureLevel: Double.random(in: 10...20),
-            pigmentationLevel: Double.random(in: 15...35),
+            skinAge: 30, // Placeholder
+            overallHealth: result.confidence * 100,
+            acneLevel: result.condition.lowercased().contains("acne") ? 70.0 : 20.0,
+            drynessLevel: result.condition.lowercased().contains("dry") ? 70.0 : 30.0,
+            moistureLevel: result.confidence * 80,
+            pigmentationLevel: result.condition.lowercased().contains("spot") ? 60.0 : 25.0,
             imageData: imageData,
-            analysisNotes: "Mock analysis for demonstration purposes"
+            analysisNotes: buildAnalysisNotes(result: result)
         )
 
         modelContext.insert(metric)
+        try? modelContext.save()
     }
 
-    private func createMetricFromAnalysis() -> SkinMetric? {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return nil }
+    private func buildAnalysisNotes(result: AnalysisResult) -> String {
+        var notes = "AWS Skin Analysis\n\n"
+        notes += "Detected: \(result.condition)\n"
+        notes += "Confidence: \(Int(result.confidence * 100))%\n\n"
 
-        return SkinMetric(
-            skinAge: Int.random(in: 25...40),
-            overallHealth: Double.random(in: 45...78),
-            acneLevel: Double.random(in: 20...40),
-            drynessLevel: Double.random(in: 40...65),
-            moistureLevel: Double.random(in: 10...20),
-            pigmentationLevel: Double.random(in: 15...35),
-            imageData: imageData,
-            analysisNotes: "Your skin shows moderate dryness and some minor acne. Consider using a gentle moisturizer and maintaining a consistent skincare routine."
-        )
+        if !result.products.isEmpty {
+            notes += "Recommended Products:\n"
+            for product in result.products.prefix(5) {
+                notes += "• \(product.name) by \(product.brand) (\(product.priceRange))\n"
+            }
+        }
+
+        return notes
     }
 }
 
-#Preview {
-    AnalysisProcessingView(image: UIImage(systemName: "person.fill")!)
+// MARK: - Animated Dots Text
+
+struct AnimatedDotsText: View {
+    let baseText: String
+    @State private var dotCount = 0
+
+    let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        Text(baseText + String(repeating: ".", count: dotCount))
+            .onReceive(timer) { _ in
+                dotCount = (dotCount + 1) % 4
+            }
+    }
 }

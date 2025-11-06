@@ -92,7 +92,7 @@ struct ImprovedHomeView: View {
             }
             .sheet(isPresented: $showAnalysis) {
                 if let metric = latestMetric {
-                    AnalysisDetailView(metric: metric)
+                    ImprovedAnalysisDetailView(metric: metric)
                 }
             }
         }
@@ -590,7 +590,7 @@ struct MiniMetricBadge: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Color.gray.opacity(0.1))
+        .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(8)
     }
 }

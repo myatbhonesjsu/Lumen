@@ -219,7 +219,7 @@ struct RecommendationCard: View {
                         .foregroundColor(.gray)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.gray.opacity(0.1))
+                        .background(Color(.tertiarySystemGroupedBackground))
                         .cornerRadius(6)
 
                     Text(item.price)
@@ -293,14 +293,14 @@ struct RecommendationCard: View {
                 }
                 .foregroundColor(.primary)
                 .padding()
-                .background(Color.gray.opacity(0.1))
+                .background(Color(.tertiarySystemGroupedBackground))
                 .cornerRadius(12)
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 10, y: 4)
+        .shadow(color: Color(.systemGray4).opacity(0.3), radius: 10, y: 4)
     }
 
     private func iconForCategory(_ category: String) -> String {

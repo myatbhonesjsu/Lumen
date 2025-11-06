@@ -15,11 +15,15 @@ struct ImprovedOnboardingView: View {
     @State private var selectedConcerns: Set<SkinConcern> = []
     @State private var selectedGoal: SkincareGoal?
     @State private var userName = ""
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         ZStack {
             Color(.systemBackground)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    isInputFocused = false
+                }
 
             VStack(spacing: 0) {
                 // Progress Indicator
@@ -30,7 +34,7 @@ struct ImprovedOnboardingView: View {
                     WelcomePageImproved()
                         .tag(0)
 
-                    NameInputPage(name: $userName)
+                    NameInputPage(name: $userName, isInputFocused: $isInputFocused)
                         .tag(1)
 
                     SkinConcernsPage(selectedConcerns: $selectedConcerns)
@@ -47,19 +51,37 @@ struct ImprovedOnboardingView: View {
                     userName: userName,
                     hasSelectedConcerns: !selectedConcerns.isEmpty,
                     hasSelectedGoal: selectedGoal != nil,
+                    isInputFocused: $isInputFocused,
                     onComplete: completeOnboarding
                 )
             }
         }
+        .onChange(of: currentPage) { _, _ in
+            isInputFocused = false
+        }
     }
 
     private func completeOnboarding() {
-        let profile = UserProfile(
-            name: userName.isEmpty ? "User" : userName,
-            hasCompletedOnboarding: true,
-            privacySettingsAccepted: true
-        )
-        modelContext.insert(profile)
+        // Check if profile already exists
+        let fetchDescriptor = FetchDescriptor<UserProfile>()
+        let existingProfiles = try? modelContext.fetch(fetchDescriptor)
+
+        if let existingProfile = existingProfiles?.first {
+            // Update existing profile
+            existingProfile.name = userName.isEmpty ? "User" : userName
+            existingProfile.hasCompletedOnboarding = true
+            existingProfile.privacySettingsAccepted = true
+        } else {
+            // Create new profile
+            let profile = UserProfile(
+                name: userName.isEmpty ? "User" : userName,
+                hasCompletedOnboarding: true,
+                privacySettingsAccepted: true
+            )
+            modelContext.insert(profile)
+        }
+
+        try? modelContext.save()
 
         withAnimation(.spring()) {
             isOnboardingComplete = true
@@ -146,7 +168,7 @@ struct WelcomePageImproved: View {
 
 struct NameInputPage: View {
     @Binding var name: String
-    @FocusState private var isNameFieldFocused: Bool
+    @FocusState.Binding var isInputFocused: Bool
 
     var body: some View {
         VStack(spacing: 32) {
@@ -171,11 +193,15 @@ struct NameInputPage: View {
                     .font(.title3)
                     .textFieldStyle(.plain)
                     .multilineTextAlignment(.center)
-                    .focused($isNameFieldFocused)
+                    .focused($isInputFocused)
                     .padding()
-                    .background(Color.gray.opacity(0.1))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
                     .padding(.horizontal, 48)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        isInputFocused = false
+                    }
 
                 Text("We'll use this to make Lumen feel more personal")
                     .font(.caption)
@@ -185,9 +211,13 @@ struct NameInputPage: View {
             Spacer()
         }
         .padding()
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isInputFocused = false
+        }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                isNameFieldFocused = true
+                isInputFocused = true
             }
         }
     }
@@ -268,7 +298,7 @@ struct ConcernCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(isSelected ? Color.yellow.opacity(0.1) : Color.white)
+            .background(isSelected ? Color.yellow.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
@@ -356,7 +386,7 @@ struct GoalCard: View {
                 }
             }
             .padding(16)
-            .background(isSelected ? Color.yellow.opacity(0.1) : Color.white)
+            .background(isSelected ? Color.yellow.opacity(0.1) : Color(.secondarySystemGroupedBackground))
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
@@ -374,6 +404,7 @@ struct NavigationControls: View {
     let userName: String
     let hasSelectedConcerns: Bool
     let hasSelectedGoal: Bool
+    @FocusState.Binding var isInputFocused: Bool
     let onComplete: () -> Void
 
     var canProceed: Bool {
@@ -389,7 +420,10 @@ struct NavigationControls: View {
     var body: some View {
         HStack(spacing: 16) {
             if currentPage > 0 {
-                Button(action: { withAnimation { currentPage -= 1 } }) {
+                Button(action: {
+                    isInputFocused = false
+                    withAnimation { currentPage -= 1 }
+                }) {
                     HStack {
                         Image(systemName: "chevron.left")
                         Text("Back")
@@ -403,6 +437,7 @@ struct NavigationControls: View {
             Spacer()
 
             Button(action: {
+                isInputFocused = false
                 if currentPage < 3 {
                     withAnimation { currentPage += 1 }
                 } else {

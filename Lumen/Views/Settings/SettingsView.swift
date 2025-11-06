@@ -391,7 +391,7 @@ struct AboutView: View {
                     .padding(.horizontal, 20)
 
                 VStack(spacing: 12) {
-                    Text("Made with ❤️ for healthy skin")
+                    Text("Made with  for healthy skin")
                         .font(.caption)
                         .foregroundColor(.gray)
 

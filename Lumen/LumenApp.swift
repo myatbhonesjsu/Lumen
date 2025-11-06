@@ -10,8 +10,6 @@ import SwiftData
 
 @main
 struct LumenApp: App {
-    @State private var isOnboardingComplete = false
-
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             SkinMetric.self,
@@ -29,12 +27,43 @@ struct LumenApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if isOnboardingComplete {
-                MainTabView()
-            } else {
-                OnboardingView(isOnboardingComplete: $isOnboardingComplete)
-            }
+            ContentRootView()
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+struct ContentRootView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var userProfiles: [UserProfile]
+    @State private var isOnboardingComplete = false
+    @State private var hasCheckedOnboarding = false
+
+    var body: some View {
+        Group {
+            if !hasCheckedOnboarding {
+                // Show a loading state while checking
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .yellow))
+                    .scaleEffect(2.0)
+            } else if isOnboardingComplete {
+                MainTabView()
+            } else {
+                ImprovedOnboardingView(isOnboardingComplete: $isOnboardingComplete)
+            }
+        }
+        .onAppear {
+            checkOnboardingStatus()
+        }
+    }
+
+    private func checkOnboardingStatus() {
+        // Check if user has completed onboarding
+        if let profile = userProfiles.first, profile.hasCompletedOnboarding {
+            isOnboardingComplete = true
+        } else {
+            isOnboardingComplete = false
+        }
+        hasCheckedOnboarding = true
     }
 }
