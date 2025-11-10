@@ -18,8 +18,10 @@ final class SkinMetric {
     var drynessLevel: Double // 0-100%
     var moistureLevel: Double // 0-100%
     var pigmentationLevel: Double // 0-100%
+    var darkCircleLevel: Double // 0-100%
     var imageData: Data?
     var analysisNotes: String
+    var folderName: String? // User-specified folder/collection name
 
     init(
         id: UUID = UUID(),
@@ -30,8 +32,10 @@ final class SkinMetric {
         drynessLevel: Double = 0,
         moistureLevel: Double = 0,
         pigmentationLevel: Double = 0,
+        darkcircleLevel: Double = 0,
         imageData: Data? = nil,
-        analysisNotes: String = ""
+        analysisNotes: String = "",
+        folderName: String? = nil
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -41,7 +45,9 @@ final class SkinMetric {
         self.drynessLevel = drynessLevel
         self.moistureLevel = moistureLevel
         self.pigmentationLevel = pigmentationLevel
+        self.darkCircleLevel = darkcircleLevel
         self.imageData = imageData
         self.analysisNotes = analysisNotes
+        self.folderName = folderName
     }
 }

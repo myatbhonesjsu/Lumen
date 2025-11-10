@@ -11,6 +11,7 @@ import SwiftData
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var userProfiles: [UserProfile]
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
     @State private var scanRemindersEnabled = true
     @State private var showDeleteConfirmation = false
     @State private var userName = ""
@@ -50,6 +51,29 @@ struct SettingsView: View {
 
                 // Preferences Section
                 Section {
+                    // Appearance Mode Picker
+                    Picker(selection: $appearanceMode) {
+                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                            HStack(spacing: 8) {
+                                Image(systemName: mode.icon)
+                                Text(mode.displayName)
+                            }
+                            .tag(mode)
+                        }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: appearanceMode.icon)
+                                .foregroundStyle(.yellow)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Appearance")
+                                    .font(.body)
+                                Text(appearanceMode.displayName)
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
+
                     Toggle(isOn: $scanRemindersEnabled) {
                         HStack(spacing: 12) {
                             Image(systemName: "bell.fill")
@@ -174,10 +198,10 @@ struct SettingsView: View {
             metrics.forEach { modelContext.delete($0) }
         }
 
-        // Delete all recommendations
-        let recFetchDescriptor = FetchDescriptor<Recommendation>()
-        if let recommendations = try? modelContext.fetch(recFetchDescriptor) {
-            recommendations.forEach { modelContext.delete($0) }
+        // Delete all user profiles
+        let profileFetchDescriptor = FetchDescriptor<UserProfile>()
+        if let profiles = try? modelContext.fetch(profileFetchDescriptor) {
+            profiles.forEach { modelContext.delete($0) }
         }
 
         try? modelContext.save()

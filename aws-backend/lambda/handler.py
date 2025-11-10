@@ -17,6 +17,7 @@ from io import BytesIO
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 bedrock = boto3.client('bedrock-agent-runtime', region_name='us-east-1')
+opensearch = boto3.client('opensearchserverless')
 
 # Environment variables
 ANALYSES_TABLE = os.environ['ANALYSES_TABLE']
@@ -24,6 +25,7 @@ PRODUCTS_TABLE = os.environ['PRODUCTS_TABLE']
 S3_BUCKET = os.environ['S3_BUCKET']
 HUGGINGFACE_URL = os.environ['HUGGINGFACE_URL']
 BEDROCK_AGENT_ID = os.environ.get('BEDROCK_AGENT_ID', '')
+OPENSEARCH_ENDPOINT = os.environ.get('OPENSEARCH_ENDPOINT', '')
 
 # DynamoDB tables
 analyses_table = dynamodb.Table(ANALYSES_TABLE)
@@ -148,7 +150,7 @@ def process_s3_upload(event):
         if BEDROCK_AGENT_ID:
             print("Stage 2: Calling Bedrock Agent...")
             try:
-                enhanced = call_bedrock_agent(prediction)
+                enhanced = call_bedrock_agent(prediction, user_id)
             except Exception as e:
                 print(f"Bedrock agent failed: {str(e)}")
                 # Continue with just initial prediction
@@ -220,59 +222,180 @@ def call_huggingface(image_bytes):
         raise
 
 
-def call_bedrock_agent(prediction):
-    """Call AWS Bedrock Agent for enhanced analysis - fallback to template-based summary"""
+def call_bedrock_agent(prediction, user_id, session_id=None):
+    """Call AWS Bedrock Agent with AgentCore for enhanced analysis using RAG"""
     condition = prediction['condition']
     confidence = float(prediction['confidence'])
     all_conditions = prediction.get('all_conditions', {})
 
-    # Generate summary based on condition (template-based fallback if Bedrock unavailable)
-    summary = generate_condition_summary(condition, confidence, all_conditions)
+    # Generate session ID if not provided (for memory)
+    if not session_id:
+        session_id = f"{user_id}_{condition}_{int(datetime.utcnow().timestamp())}"
 
-    # If Bedrock Agent is configured, try to use it
+    print(f"🧠 Calling Bedrock Agent with session: {session_id}")
+
+    # Get user's previous analyses for memory context
+    user_history = get_user_analysis_history(user_id, limit=5)
+
+    # Build comprehensive prompt with medical context
+    input_text = f"""
+SKIN ANALYSIS REQUEST
+
+Patient Profile:
+- User ID: {user_id}
+- Previous analyses: {len(user_history)} sessions
+
+Current Analysis:
+- Primary Condition: {condition}
+- Confidence: {confidence:.1%}
+- Secondary Conditions: {', '.join([f"{k} ({v:.1%})" for k, v in list(all_conditions.items())[:3]])}
+
+Analysis Context:
+{build_analysis_context(prediction, user_history)}
+
+Please provide a comprehensive analysis including:
+1. Medical explanation of the condition(s)
+2. Evidence-based treatment recommendations
+3. Product suggestions from our database
+4. When to consult a dermatologist
+5. Prevention strategies
+
+Cite your sources from medical literature and provide reasoning for each recommendation.
+"""
+
     if BEDROCK_AGENT_ID:
         try:
-            print("Attempting Bedrock Agent call...")
-            input_text = f"""
-            Analyze this skin condition for personalized recommendations:
-
-            Detected Condition: {condition}
-            Confidence: {confidence:.1%}
-            All Detections: {json.dumps(all_conditions)}
-
-            Provide a brief 1-2 sentence summary of this condition.
-            """
+            print("🤖 Invoking Bedrock Agent with RAG...")
 
             response = bedrock.invoke_agent(
                 agentId=BEDROCK_AGENT_ID,
                 agentAliasId='TSTALIASID',
-                sessionId=str(uuid.uuid4()),
-                inputText=input_text.strip()
+                sessionId=session_id,  # Enable memory across sessions
+                inputText=input_text.strip(),
+                enableTrace=True  # Enable tracing for debugging
             )
 
-            # Parse Bedrock response
+            # Parse AgentCore response
+            agent_response = response.get('completion', '')
+            citations = response.get('citations', [])
+
+            # Extract structured information from agent response
+            enhanced_analysis = parse_agent_response(agent_response)
+
             enhanced = {
-                'summary': summary,  # Use template summary as fallback
-                'recommendations': [],
-                'severity': 'moderate',
-                'care_instructions': [],
+                'summary': enhanced_analysis.get('summary', generate_condition_summary(condition, confidence, all_conditions)),
+                'recommendations': enhanced_analysis.get('recommendations', []),
+                'severity': enhanced_analysis.get('severity', determine_severity(confidence)),
+                'care_instructions': enhanced_analysis.get('care_instructions', []),
+                'citations': citations,
+                'session_id': session_id,
+                'used_memory': len(user_history) > 0,
                 'timestamp': datetime.utcnow().isoformat()
             }
 
-            print(f"Bedrock agent analysis complete")
+            print(f"✅ Bedrock Agent analysis complete (memory: {len(user_history)} sessions)")
             return enhanced
 
         except Exception as e:
-            print(f"Bedrock agent error: {str(e)}, using template summary")
+            print(f"❌ Bedrock agent error: {str(e)}, falling back to template")
+            # Fall through to template-based response
 
-    # Return template-based summary
+    # Fallback to template-based summary
     return {
-        'summary': summary,
+        'summary': generate_condition_summary(condition, confidence, all_conditions),
         'recommendations': [],
         'severity': determine_severity(confidence),
         'care_instructions': [],
+        'citations': [],
+        'session_id': session_id,
+        'used_memory': False,
         'timestamp': datetime.utcnow().isoformat()
     }
+
+
+def get_user_analysis_history(user_id, limit=5):
+    """Get user's previous analysis history for memory context"""
+    try:
+        # Scan analyses table for user's history
+        response = analyses_table.scan(
+            FilterExpression='user_id = :uid',
+            ExpressionAttributeValues={':uid': user_id},
+            Limit=limit,
+            ScanIndexForward=False  # Most recent first
+        )
+
+        analyses = response.get('Items', [])
+
+        # Convert Decimal types and format for context
+        history = []
+        for analysis in analyses:
+            if 'prediction' in analysis and 'enhanced_analysis' in analysis:
+                history.append({
+                    'condition': analysis['prediction'].get('condition', 'Unknown'),
+                    'confidence': float(analysis['prediction'].get('confidence', 0)),
+                    'date': analysis.get('timestamp', 'Unknown'),
+                    'severity': analysis.get('enhanced_analysis', {}).get('severity', 'Unknown')
+                })
+
+        return history
+
+    except Exception as e:
+        print(f"Error fetching user history: {e}")
+        return []
+
+
+def build_analysis_context(prediction, user_history):
+    """Build context string from prediction and user history"""
+    context = f"Current analysis shows {prediction['condition']} with {float(prediction['confidence']):.1%} confidence."
+
+    if user_history:
+        context += f"\n\nPatient History ({len(user_history)} previous analyses):"
+        for i, hist in enumerate(user_history[:3]):  # Show last 3
+            context += f"\n{i+1}. {hist['date']}: {hist['condition']} ({hist['severity']})"
+
+    return context
+
+
+def parse_agent_response(agent_response):
+    """Parse structured information from Bedrock Agent response"""
+    # This is a simplified parser - in production, use more sophisticated NLP
+    analysis = {
+        'summary': '',
+        'recommendations': [],
+        'severity': 'moderate',
+        'care_instructions': []
+    }
+
+    if not agent_response:
+        return analysis
+
+    # Split response into sections (basic parsing)
+    sections = agent_response.split('\n\n')
+
+    for section in sections:
+        section_lower = section.lower()
+
+        if 'summary' in section_lower or 'explanation' in section_lower:
+            analysis['summary'] = section.strip()
+        elif 'recommend' in section_lower or 'treat' in section_lower:
+            # Extract recommendations
+            lines = section.split('\n')
+            for line in lines:
+                if line.strip().startswith(('1.', '2.', '3.', '4.', '5.', '-', '•')):
+                    analysis['recommendations'].append(line.strip().lstrip('123456789.-• '))
+        elif 'care' in section_lower or 'instruction' in section_lower:
+            analysis['care_instructions'].append(section.strip())
+        elif 'severe' in section_lower:
+            if 'high' in section_lower or 'severe' in section_lower:
+                analysis['severity'] = 'high'
+            elif 'low' in section_lower or 'mild' in section_lower:
+                analysis['severity'] = 'low'
+
+    # Fallback if parsing failed
+    if not analysis['summary']:
+        analysis['summary'] = agent_response[:500] + "..." if len(agent_response) > 500 else agent_response
+
+    return analysis
 
 
 def generate_condition_summary(condition, confidence, all_conditions):
