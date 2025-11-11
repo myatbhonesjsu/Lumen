@@ -14,15 +14,26 @@ struct CleanChatView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \SkinMetric.timestamp, order: .reverse) private var skinMetrics: [SkinMetric]
+    @Query(sort: \PersistedChatMessage.timestamp, order: .forward) private var persistedMessages: [PersistedChatMessage]
 
-    @State private var messages: [ChatMessage] = []
     @State private var inputText = ""
     @State private var isLoading = false
-    @State private var sessionId = UUID().uuidString
     @State private var relatedArticles: [ArticleRecommendation] = []
     @State private var selectedArticle: ArticleRecommendation?
+    @State private var showClearChatAlert = false
     @FocusState private var isInputFocused: Bool
     @StateObject private var keyboardObserver = KeyboardObserver()
+
+    // Stable session ID that persists across app launches
+    private var sessionId: String {
+        if let existing = UserDefaults.standard.string(forKey: "chatSessionId") {
+            return existing
+        } else {
+            let newId = UUID().uuidString
+            UserDefaults.standard.set(newId, forKey: "chatSessionId")
+            return newId
+        }
+    }
     
     // ⚙️ MANUAL PADDING ADJUSTMENTS - Edit these values to fine-tune spacing
 
@@ -57,11 +68,12 @@ struct CleanChatView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                        if messages.isEmpty {
+        NavigationStack {
+            ZStack(alignment: .bottom) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            if persistedMessages.isEmpty {
                             // Welcome Screen
                             VStack(spacing: 24) {
                                 Spacer()
@@ -100,8 +112,8 @@ struct CleanChatView: View {
                             .frame(maxWidth: .infinity)
                         } else {
                             // Chat Messages
-                            ForEach(messages) { message in
-                                ChatBubble(message: message)
+                            ForEach(persistedMessages) { message in
+                                ChatBubbleView(message: message)
                                     .id(message.id)
                             }
                             
@@ -137,8 +149,8 @@ struct CleanChatView: View {
                     }
                     .padding()
                     .padding(.bottom, scrollBottomPadding)
-                    .onChange(of: messages.count) { _, _ in
-                        if let lastMessage = messages.last {
+                    .onChange(of: persistedMessages.count) { _, _ in
+                        if let lastMessage = persistedMessages.last {
                             withAnimation {
                                 proxy.scrollTo(lastMessage.id, anchor: .bottom)
                             }
@@ -188,10 +200,31 @@ struct CleanChatView: View {
             .background(Color(.systemBackground))
             .padding(.bottom, inputBottomPadding)
             .animation(.easeOut(duration: 0.25), value: keyboardObserver.height)
-        }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
-        .sheet(item: $selectedArticle) { article in
-            ArticleWebView(article: article)
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .navigationTitle("AI Assistant")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if !persistedMessages.isEmpty {
+                        Button(action: { showClearChatAlert = true }) {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+            .alert("Clear Chat History", isPresented: $showClearChatAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Clear", role: .destructive) {
+                    clearChat()
+                }
+            } message: {
+                Text("This will delete all your chat messages. This action cannot be undone.")
+            }
+            .sheet(item: $selectedArticle) { article in
+                ArticleWebView(article: article)
+            }
         }
     }
     
@@ -214,12 +247,16 @@ struct CleanChatView: View {
 
         isInputFocused = false
 
-        let userMessage = ChatMessage(
+        // Create and save user message to SwiftData
+        let userMessage = PersistedChatMessage(
             role: "user",
-            message: trimmed
+            message: trimmed,
+            sessionId: sessionId,
+            sources: nil
         )
+        modelContext.insert(userMessage)
+        try? modelContext.save()
 
-        messages.append(userMessage)
         inputText = ""
         isLoading = true
 
@@ -235,26 +272,60 @@ struct CleanChatView: View {
                 )
 
                 await MainActor.run {
-                    let assistantMessage = ChatMessage(
+                    // Convert API sources to ChatSource format
+                    let chatSources = response.sources?.map { apiSource in
+                        ChatSource(
+                            id: UUID().uuidString,
+                            source: apiSource.source,
+                            url: nil
+                        )
+                    }
+
+                    // Create and save assistant message to SwiftData
+                    let assistantMessage = PersistedChatMessage(
                         role: "assistant",
                         message: response.response,
-                        sources: response.sources
+                        sessionId: sessionId,
+                        sources: chatSources
                     )
-                    messages.append(assistantMessage)
+                    modelContext.insert(assistantMessage)
+                    try? modelContext.save()
+
                     relatedArticles = response.relatedArticles
                     isLoading = false
                 }
             } catch {
                 await MainActor.run {
-                    let errorMessage = ChatMessage(
+                    // Create and save error message to SwiftData
+                    let errorMessage = PersistedChatMessage(
                         role: "assistant",
-                        message: "I'm sorry, I encountered an error. Please try again."
+                        message: "I'm sorry, I encountered an error. Please try again.",
+                        sessionId: sessionId,
+                        sources: nil
                     )
-                    messages.append(errorMessage)
+                    modelContext.insert(errorMessage)
+                    try? modelContext.save()
+
                     isLoading = false
                 }
             }
         }
+    }
+
+    private func clearChat() {
+        // Delete all messages from SwiftData
+        for message in persistedMessages {
+            modelContext.delete(message)
+        }
+        try? modelContext.save()
+
+        // Clear related articles
+        relatedArticles = []
+
+        // Reset session ID to start fresh
+        UserDefaults.standard.removeObject(forKey: "chatSessionId")
+
+        HapticManager.shared.success()
     }
 
     private func prepareLocalAnalyses() -> [[String: Any]] {
@@ -295,17 +366,17 @@ struct CleanChatView: View {
     }
 }
 
-// MARK: - Chat Bubble
+// MARK: - Chat Bubble View
 
-struct ChatBubble: View {
-    let message: ChatMessage
-    
+struct ChatBubbleView: View {
+    let message: PersistedChatMessage
+
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             if message.role == "user" {
                 Spacer(minLength: 60)
             }
-            
+
             VStack(alignment: message.role == "user" ? .trailing : .leading, spacing: 6) {
                 Text(message.message)
                     .font(.body)
@@ -318,16 +389,16 @@ struct ChatBubble: View {
                         : Color(.systemGray5)
                     )
                     .cornerRadius(20)
-                
+
                 if let sources = message.sources, !sources.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Sources")
                             .font(.caption2)
                             .fontWeight(.semibold)
                             .foregroundColor(.secondary)
-                        
-                        ForEach(sources.indices, id: \.self) { index in
-                            Text("• \(sources[index].source)")
+
+                        ForEach(sources) { source in
+                            Text("• \(source.source)")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
@@ -336,7 +407,7 @@ struct ChatBubble: View {
                     .padding(.top, 2)
                 }
             }
-            
+
             if message.role == "assistant" {
                 Spacer(minLength: 60)
             }

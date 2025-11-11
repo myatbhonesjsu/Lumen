@@ -49,7 +49,8 @@ struct LumenApp: App {
             SkinMetric.self,
             UserProfile.self,
             DailyRoutine.self,
-            PersonalizedRoutine.self
+            PersonalizedRoutine.self,
+            PersistedChatMessage.self
         ])
         
         // Try default configuration first
@@ -124,7 +125,7 @@ struct LumenApp: App {
     static func resetDatabaseIfNeeded() {
         // Check if schema version changed (simplified check)
         let userDefaults = UserDefaults.standard
-        let currentSchemaVersion = "1.1.0" // Increment when schema changes
+        let currentSchemaVersion = "1.2.0" // Increment when schema changes
         let savedSchemaVersion = userDefaults.string(forKey: "schemaVersion")
 
         if savedSchemaVersion != currentSchemaVersion {

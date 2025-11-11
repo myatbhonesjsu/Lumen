@@ -15,7 +15,22 @@ struct ImprovedOnboardingView: View {
     @State private var selectedConcerns: Set<SkinConcern> = []
     @State private var selectedGoal: SkincareGoal?
     @State private var userName = ""
+    @State private var age = ""
+    @State private var height = ""
+    @State private var weight = ""
     @FocusState private var isInputFocused: Bool
+
+    private var hasValidBodyMetrics: Bool {
+        if age.isEmpty && height.isEmpty && weight.isEmpty {
+            return true
+        }
+
+        let validAge = age.isEmpty || Int(age) != nil
+        let validHeight = height.isEmpty || Double(height) != nil
+        let validWeight = weight.isEmpty || Double(weight) != nil
+
+        return validAge && validHeight && validWeight
+    }
 
     var body: some View {
         ZStack {
@@ -27,7 +42,7 @@ struct ImprovedOnboardingView: View {
 
             VStack(spacing: 0) {
                 // Progress Indicator
-                ProgressBar(currentStep: currentPage, totalSteps: 4)
+                ProgressBar(currentStep: currentPage, totalSteps: 5)
                     .padding(.top, 16)
 
                 TabView(selection: $currentPage) {
@@ -42,6 +57,9 @@ struct ImprovedOnboardingView: View {
 
                     GoalsPage(selectedGoal: $selectedGoal)
                         .tag(3)
+
+                    BodyMetricsPage(age: $age, height: $height, weight: $weight)
+                        .tag(4)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -50,6 +68,7 @@ struct ImprovedOnboardingView: View {
                     currentPage: $currentPage,
                     userName: userName,
                     hasSelectedConcerns: !selectedConcerns.isEmpty,
+                    hasBodyMetrics: hasValidBodyMetrics,
                     hasSelectedGoal: selectedGoal != nil,
                     isInputFocused: $isInputFocused,
                     onComplete: completeOnboarding
@@ -66,17 +85,28 @@ struct ImprovedOnboardingView: View {
         let fetchDescriptor = FetchDescriptor<UserProfile>()
         let existingProfiles = try? modelContext.fetch(fetchDescriptor)
 
+        let parsedAge = Int(age)
+        let parsedHeight = Double(height)
+        let parsedWeight = Double(weight)
+
         if let existingProfile = existingProfiles?.first {
             // Update existing profile
             existingProfile.name = userName.isEmpty ? "User" : userName
             existingProfile.hasCompletedOnboarding = true
             existingProfile.privacySettingsAccepted = true
+            existingProfile.age = parsedAge
+            existingProfile.height = parsedHeight
+            existingProfile.weight = parsedWeight
         } else {
             // Create new profile
             let profile = UserProfile(
                 name: userName.isEmpty ? "User" : userName,
                 hasCompletedOnboarding: true,
-                privacySettingsAccepted: true
+                privacySettingsAccepted: true,
+                lastScanDate: nil,
+                age: parsedAge,
+                height: parsedHeight,
+                weight: parsedWeight
             )
             modelContext.insert(profile)
         }
@@ -220,6 +250,60 @@ struct NameInputPage: View {
                 isInputFocused = true
             }
         }
+    }
+}
+
+// MARK: - Body Metrics Page
+
+struct BodyMetricsPage: View {
+    @Binding var age: String
+    @Binding var height: String
+    @Binding var weight: String
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            VStack(spacing: 12) {
+                Image(systemName: "figure.wave")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.yellow)
+
+                Text("Tell us about you (Optional)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("Age, height, and weight help personalize insights. You can update this anytime.")
+                    .font(.body)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
+
+            VStack(spacing: 16) {
+                TextField("Age (years)", text: $age)
+                    .keyboardType(.numberPad)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+
+                TextField("Height (cm)", text: $height)
+                    .keyboardType(.decimalPad)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+
+                TextField("Weight (kg)", text: $weight)
+                    .keyboardType(.decimalPad)
+                    .padding()
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+            }
+            .padding(.horizontal, 40)
+
+            Spacer()
+        }
+        .padding()
     }
 }
 
@@ -403,6 +487,7 @@ struct NavigationControls: View {
     @Binding var currentPage: Int
     let userName: String
     let hasSelectedConcerns: Bool
+    let hasBodyMetrics: Bool
     let hasSelectedGoal: Bool
     @FocusState.Binding var isInputFocused: Bool
     let onComplete: () -> Void
@@ -413,6 +498,7 @@ struct NavigationControls: View {
         case 1: return !userName.isEmpty
         case 2: return hasSelectedConcerns
         case 3: return hasSelectedGoal
+        case 4: return hasBodyMetrics
         default: return false
         }
     }
@@ -438,16 +524,16 @@ struct NavigationControls: View {
 
             Button(action: {
                 isInputFocused = false
-                if currentPage < 3 {
+                if currentPage < 4 {
                     withAnimation { currentPage += 1 }
                 } else {
                     onComplete()
                 }
             }) {
                 HStack {
-                    Text(currentPage == 3 ? "Get Started" : "Next")
+                    Text(currentPage == 4 ? "Get Started" : "Next")
                         .fontWeight(.semibold)
-                    if currentPage < 3 {
+                    if currentPage < 4 {
                         Image(systemName: "chevron.right")
                     }
                 }
