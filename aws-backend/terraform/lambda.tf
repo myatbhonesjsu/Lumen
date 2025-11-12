@@ -90,8 +90,7 @@ resource "aws_lambda_function" "analyze_skin" {
       PRODUCTS_TABLE     = aws_dynamodb_table.products.name
       S3_BUCKET         = aws_s3_bucket.images.id
       HUGGINGFACE_URL   = var.huggingface_api_url
-      BEDROCK_AGENT_ID  = aws_bedrockagent_agent.skincare_agent.id
-      OPENSEARCH_ENDPOINT = aws_opensearchserverless_collection.skincare_kb.collection_endpoint
+      BEDROCK_AGENT_ID  = ""
     }
   }
 

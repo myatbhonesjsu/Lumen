@@ -15,11 +15,6 @@ output "api_endpoint" {
   value       = "${aws_api_gateway_stage.main.invoke_url}/"
 }
 
-output "learning_hub_api_endpoint" {
-  description = "Learning Hub API Gateway endpoint URL"
-  value       = "${aws_api_gateway_stage.learning_hub.invoke_url}/"
-}
-
 output "s3_bucket_images" {
   description = "S3 bucket for image uploads"
   value       = aws_s3_bucket.images.bucket
@@ -28,11 +23,6 @@ output "s3_bucket_images" {
 output "lambda_function" {
   description = "Skin Analysis Lambda function name"
   value       = aws_lambda_function.analyze_skin.function_name
-}
-
-output "learning_hub_lambda_function" {
-  description = "Learning Hub Lambda function name"
-  value       = aws_lambda_function.learning_hub_chatbot.function_name
 }
 
 output "next_steps" {
@@ -44,14 +34,9 @@ output "next_steps" {
     Next steps:
     1. Update iOS app with API endpoints:
        • Skin Analysis: ${aws_api_gateway_stage.main.invoke_url}/
-       • Learning Hub: ${aws_api_gateway_stage.learning_hub.invoke_url}/
 
     2. Test APIs:
        • curl ${aws_api_gateway_stage.main.invoke_url}/upload-image
-       • curl ${aws_api_gateway_stage.learning_hub.invoke_url}/articles
-
-    3. Optional: Setup Knowledge Base for enhanced AI responses
-       • cd scripts && python3 setup-knowledge-base.py
 
     See aws-backend/README.md for detailed instructions.
   EOT

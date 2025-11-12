@@ -32,33 +32,74 @@ analyses_table = dynamodb.Table(ANALYSES_TABLE)
 products_table = dynamodb.Table(PRODUCTS_TABLE)
 
 
+def get_user_id_from_event(event):
+    """Extract user ID from Cognito authorizer context"""
+    try:
+        # Log the event structure for debugging
+        print(f"Event keys: {list(event.keys())}")
+
+        # Cognito authorizer adds claims to request context
+        request_context = event.get('requestContext', {})
+        print(f"Request context keys: {list(request_context.keys())}")
+
+        authorizer = request_context.get('authorizer', {})
+        print(f"Authorizer keys: {list(authorizer.keys())}")
+
+        # Get user ID from Cognito claims
+        # Cognito provides 'sub' (subject) claim as unique user identifier
+        claims = authorizer.get('claims', {})
+        print(f"Claims: {claims}")
+
+        cognito_username = claims.get('sub')
+
+        if cognito_username:
+            print(f"✓ Found user ID (sub): {cognito_username}")
+            return cognito_username
+
+        # Fallback to email if sub not available
+        email = claims.get('email')
+        if email:
+            print(f"✓ Found user ID (email): {email}")
+            return email
+
+        print("⚠️ Warning: No user ID found in Cognito claims")
+        print(f"   Full authorizer object: {authorizer}")
+        return None
+
+    except Exception as e:
+        print(f"❌ Error extracting user ID: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def lambda_handler(event, context):
     """
     Main Lambda handler - routes requests based on source
-    
+
     Can be triggered by:
     1. S3 upload event (process image)
     2. API Gateway (get presigned URL, query results)
     """
     print(f"Event: {json.dumps(event)}")
-    
+
     # S3 trigger - process uploaded image
     if 'Records' in event and event['Records'][0]['eventSource'] == 'aws:s3':
         return process_s3_upload(event)
-    
+
     # API Gateway triggers
     http_method = event.get('httpMethod', '')
     path = event.get('path', '')
-    
+
     if http_method == 'POST' and '/upload-image' in path:
         return handle_upload_request(event)
-    
+
     elif http_method == 'GET' and '/analysis/' in path:
         return handle_get_analysis(event)
-    
+
     elif http_method == 'GET' and '/recommendations' in path:
         return handle_get_recommendations(event)
-    
+
     else:
         return {
             'statusCode': 404,
@@ -71,10 +112,16 @@ def handle_upload_request(event):
     try:
         # Generate analysis ID
         analysis_id = str(uuid.uuid4())
-        
-        # Get user ID from headers or generate
-        headers = event.get('headers', {})
-        user_id = headers.get('x-user-id', 'anonymous')
+
+        # Get authenticated user ID from Cognito
+        user_id = get_user_id_from_event(event)
+
+        if not user_id:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'Unauthorized - No valid user ID'})
+            }
         
         # S3 key for upload
         s3_key = f"uploads/{user_id}/{analysis_id}.jpg"
@@ -131,11 +178,19 @@ def process_s3_upload(event):
         s3_record = event['Records'][0]['s3']
         bucket = s3_record['bucket']['name']
         key = s3_record['object']['key']
-        
+
         print(f"Processing image: s3://{bucket}/{key}")
-        
-        # Extract analysis_id from key
-        analysis_id = key.split('/')[-1].replace('.jpg', '')
+
+        # Extract user_id and analysis_id from key (format: uploads/{user_id}/{analysis_id}.jpg)
+        path_parts = key.split('/')
+        if len(path_parts) >= 3:
+            user_id = path_parts[1]
+            analysis_id = path_parts[2].replace('.jpg', '')
+        else:
+            print(f"Error: Invalid S3 key format: {key}")
+            return {'statusCode': 400, 'body': 'Invalid S3 key format'}
+
+        print(f"User ID: {user_id}, Analysis ID: {analysis_id}")
         
         # Get image from S3
         image_obj = s3.get_object(Bucket=bucket, Key=key)
@@ -164,6 +219,7 @@ def process_s3_upload(event):
         # Update DynamoDB with results
         update_analysis_results(
             analysis_id=analysis_id,
+            user_id=user_id,
             prediction=prediction,
             enhanced=enhanced,
             products=products
@@ -501,7 +557,7 @@ def get_product_recommendations(condition, limit=5):
         return []
 
 
-def update_analysis_results(analysis_id, prediction, enhanced, products):
+def update_analysis_results(analysis_id, user_id, prediction, enhanced, products):
     """Update DynamoDB with analysis results"""
     try:
         # Prepare update expression
@@ -520,7 +576,7 @@ def update_analysis_results(analysis_id, prediction, enhanced, products):
             update_expression += ", enhanced_analysis = :enhanced"
         
         analyses_table.update_item(
-            Key={'analysis_id': analysis_id, 'user_id': 'anonymous'},  # Need proper user_id
+            Key={'analysis_id': analysis_id, 'user_id': user_id},
             UpdateExpression=update_expression,
             ExpressionAttributeNames={'#status': 'status'},
             ExpressionAttributeValues=update_data
@@ -539,22 +595,34 @@ def handle_get_analysis(event):
         # Extract analysis_id from path
         path_params = event.get('pathParameters', {})
         analysis_id = path_params.get('id')
-        
+
         if not analysis_id:
             return {
                 'statusCode': 400,
+                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'error': 'Missing analysis_id'})
             }
-        
-        # Query DynamoDB
+
+        # Get authenticated user ID
+        user_id = get_user_id_from_event(event)
+
+        if not user_id:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'Unauthorized - No valid user ID'})
+            }
+
+        # Query DynamoDB with user_id to ensure ownership
         response = analyses_table.get_item(
-            Key={'analysis_id': analysis_id, 'user_id': 'anonymous'}  # Need proper user_id
+            Key={'analysis_id': analysis_id, 'user_id': user_id}
         )
         
         if 'Item' not in response:
             return {
-                'statusCode': 404,
-                'body': json.dumps({'error': 'Analysis not found'})
+                'statusCode': 403,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'Forbidden - Analysis not found or access denied'})
             }
         
         item = response['Item']

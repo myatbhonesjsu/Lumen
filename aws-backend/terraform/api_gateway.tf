@@ -11,6 +11,15 @@ resource "aws_api_gateway_rest_api" "main" {
   tags = local.common_tags
 }
 
+# Cognito Authorizer
+resource "aws_api_gateway_authorizer" "cognito" {
+  name            = "${local.prefix}-cognito-authorizer"
+  rest_api_id     = aws_api_gateway_rest_api.main.id
+  type            = "COGNITO_USER_POOLS"
+  provider_arns   = [aws_cognito_user_pool.main.arn]
+  identity_source = "method.request.header.Authorization"
+}
+
 # API Gateway Resources and Methods
 
 # /upload-image endpoint
@@ -24,7 +33,8 @@ resource "aws_api_gateway_method" "upload_post" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_resource.upload.id
   http_method   = "POST"
-  authorization = "NONE" # Use Cognito in production
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
 }
 
 resource "aws_api_gateway_integration" "upload_lambda" {
@@ -54,7 +64,8 @@ resource "aws_api_gateway_method" "analysis_get" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_resource.analysis_id.id
   http_method   = "GET"
-  authorization = "NONE" # Use Cognito in production
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
 }
 
 resource "aws_api_gateway_integration" "analysis_lambda" {
@@ -84,7 +95,8 @@ resource "aws_api_gateway_method" "recommendations_get" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_resource.recommendations.id
   http_method   = "GET"
-  authorization = "NONE" # Use Cognito in production
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
 }
 
 resource "aws_api_gateway_integration" "recommendations_lambda" {

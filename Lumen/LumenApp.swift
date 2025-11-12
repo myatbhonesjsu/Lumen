@@ -183,11 +183,32 @@ struct ContentRootView: View {
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
     @State private var isOnboardingComplete = false
     @State private var hasCheckedOnboarding = false
+    @State private var isAuthenticating = true
+    @State private var authenticationError: String?
 
     var body: some View {
         Group {
-            if !hasCheckedOnboarding {
-                // Show a loading state while checking
+            if isAuthenticating {
+                // Show authentication loading state
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .yellow))
+                        .scaleEffect(2.0)
+
+                    Text("Connecting securely...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+
+                    if let error = authenticationError {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                    }
+                }
+            } else if !hasCheckedOnboarding {
+                // Show a loading state while checking onboarding
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .yellow))
                     .scaleEffect(2.0)
@@ -198,9 +219,40 @@ struct ContentRootView: View {
             }
         }
         .onAppear {
-            checkOnboardingStatus()
+            authenticateAndInitialize()
         }
         .preferredColorScheme(appearanceMode.colorScheme)
+    }
+
+    private func authenticateAndInitialize() {
+        // Step 1: Authenticate with Cognito demo user
+        print("🔐 Starting authentication...")
+
+        CognitoAuthService.shared.authenticateDemo { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success:
+                    print("✅ Authentication successful")
+                    print("   Status: \(CognitoAuthService.shared.statusDescription)")
+                    authenticationError = nil
+                    isAuthenticating = false
+
+                    // Step 2: Check onboarding status after authentication
+                    checkOnboardingStatus()
+
+                case .failure(let error):
+                    print("❌ Authentication failed: \(error.localizedDescription)")
+                    authenticationError = "Authentication failed. Using demo mode."
+
+                    // Continue anyway for demo purposes
+                    // In production, you might want to retry or show an error screen
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        isAuthenticating = false
+                        checkOnboardingStatus()
+                    }
+                }
+            }
+        }
     }
 
     private func checkOnboardingStatus() {
