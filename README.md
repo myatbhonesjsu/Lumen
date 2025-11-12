@@ -10,9 +10,6 @@
 </p>
 
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/myatbhonesjsu/Lumen/blob/ai-skin-notebook/Agentic_AI_Skin_Health_Assistant.ipynb)
-
-Click the button above to open and run the AI Skin Health Assistant notebook directly in Google Colab.
 
 
 
