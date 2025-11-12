@@ -8,6 +8,10 @@
   <img src="https://img.shields.io/badge/SwiftUI-3.0-green.svg" alt="SwiftUI">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
 </p>
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/myatbhonesjsu/Lumen/blob/ai-skin-notebook/Agentic_AI_Skin_Health_Assistant.ipynb)
+
+Click the button above to open and run the AI Skin Health Assistant notebook in Google Colab.
+
 
 ##  Overview
 
