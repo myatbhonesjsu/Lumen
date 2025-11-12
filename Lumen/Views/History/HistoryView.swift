@@ -11,10 +11,15 @@ import SwiftData
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \SkinMetric.timestamp, order: .reverse) private var skinMetrics: [SkinMetric]
-    @State private var selectedMetric: SkinMetric?
+    @State private var selectedMetricID: UUID?
     @State private var showDetail = false
     @State private var groupByFolder = true
     @State private var refreshID = UUID()
+
+    private var selectedMetric: SkinMetric? {
+        guard let id = selectedMetricID else { return nil }
+        return skinMetrics.first(where: { $0.id == id })
+    }
     
     private var groupedMetrics: [String: [SkinMetric]] {
         guard !skinMetrics.isEmpty else {
@@ -89,7 +94,7 @@ struct HistoryView: View {
                                                 folderName: folderName,
                                                 metrics: groupedMetrics[folderName] ?? [],
                                                 onSelectMetric: { metric in
-                                                    selectedMetric = metric
+                                                    selectedMetricID = metric.id
                                                     showDetail = true
                                                 },
                                                 onDeleteMetric: { metric in
@@ -108,7 +113,7 @@ struct HistoryView: View {
                                         ForEach(skinMetrics) { metric in
                                             HistoryCard(metric: metric)
                                                 .onTapGesture {
-                                                    selectedMetric = metric
+                                                    selectedMetricID = metric.id
                                                     showDetail = true
                                                 }
                                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -131,8 +136,25 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .sheet(isPresented: $showDetail) {
-                if let metric = selectedMetric {
+                if let id = selectedMetricID,
+                   let metric = skinMetrics.first(where: { $0.id == id }) {
                     ModernAnalysisDetailView(metric: metric)
+                } else {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 50))
+                            .foregroundColor(.orange)
+                        Text("Analysis not found")
+                            .font(.headline)
+                        Button("Close") {
+                            showDetail = false
+                        }
+                        .padding()
+                        .background(Color.yellow)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    .padding()
                 }
             }
             .onAppear {

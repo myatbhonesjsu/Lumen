@@ -95,24 +95,30 @@ dynamodb_products_table = "lumen-skincare-dev-products"
 ### Step 4: Load Product Data
 
 ```bash
-cd ../scripts
+cd ..
 
-# Set table name from Terraform output
-export PRODUCTS_TABLE=$(cd ../terraform && terraform output -raw dynamodb_products_table)
-
-# Install dependencies
-npm install aws-sdk
-
-# Load products
-node load-products.js
+# Load products from JSON file
+python3 scripts/load-products.py
 
 # Expected output:
-# 📦 Loading 12 products into DynamoDB...
-# ✅ Loaded: CeraVe Acne Foaming Cream Cleanser
-# ✅ Loaded: The Ordinary Niacinamide 10% + Zinc 1%
-# ...
-# ✅ Complete! Success: 12, Errors: 0
+# ============================================================
+#   Lumen Product Loader
+# ============================================================
+#
+# Connecting to DynamoDB table: lumen-skincare-dev-products
+# ✓ Connected to table: lumen-skincare-dev-products
+#   Status: ACTIVE
+#   Item count: 0
+# ✓ Loaded 12 products from data/products.json
+#
+# Uploading 12 products to DynamoDB...
+#   ✓ 1: CeraVe Acne Foaming Cream Cleanser
+#   ✓ 2: The Ordinary Niacinamide 10% + Zinc 1%
+#   ...
+# ✓ All products loaded successfully!
 ```
+
+See [PRODUCTS_MANAGEMENT.md](PRODUCTS_MANAGEMENT.md) for detailed product management instructions.
 
 ### Step 5: Test Backend
 
@@ -382,6 +388,100 @@ Create `bedrock-agent-schema.json`:
   }
 }
 ```
+
+---
+
+## 🛍️ Product Management
+
+Product recommendations are managed via JSON files and Python scripts. All products are stored in DynamoDB.
+
+### View Current Products
+
+```bash
+# Export current products from DynamoDB
+python3 scripts/export-products.py
+
+# View the exported file
+cat data/products-export.json
+```
+
+### Add/Edit Products
+
+```bash
+# 1. Edit the products JSON file
+nano data/products.json
+
+# 2. Upload changes to DynamoDB
+python3 scripts/load-products.py
+```
+
+### Product JSON Structure
+
+```json
+{
+  "product_id": "13",
+  "name": "Product Name",
+  "brand": "Brand Name",
+  "description": "Product description",
+  "price_range": "$15-20",
+  "amazon_url": "https://amazon.com/dp/XXXXXXXXX",
+  "rating": 4.5,
+  "review_count": 1000,
+  "category": "Serum",
+  "target_conditions": [
+    "Acne",
+    "Oily Skin"
+  ],
+  "ingredients": [
+    "Active Ingredient"
+  ]
+}
+```
+
+### Target Conditions Reference
+
+Products are matched to skin conditions. Use these exact strings in `target_conditions`:
+- Acne
+- Oily Skin
+- Large Pores
+- Dark Circles
+- Eye Bags
+- Dark Spots
+- Hyperpigmentation
+- Wrinkles
+- Fine Lines
+- Dry Skin
+- Sensitive Skin
+- Healthy Skin
+- Rosacea
+
+### Common Product Operations
+
+```bash
+# Backup products before changes
+python3 scripts/export-products.py --output "backup-$(date +%Y%m%d).json"
+
+# Clear all products and reload
+python3 scripts/load-products.py --clear
+
+# Load from custom file
+python3 scripts/load-products.py --file custom-products.json
+
+# View product count by category
+python3 scripts/export-products.py && \
+  cat data/products-export.json | python3 -c "
+import json, sys
+products = json.load(sys.stdin)
+categories = {}
+for p in products:
+    cat = p.get('category', 'Unknown')
+    categories[cat] = categories.get(cat, 0) + 1
+for cat, count in sorted(categories.items()):
+    print(f'{cat}: {count}')
+"
+```
+
+**Detailed Documentation**: See [PRODUCTS_MANAGEMENT.md](PRODUCTS_MANAGEMENT.md) for complete guide on managing products.
 
 ---
 

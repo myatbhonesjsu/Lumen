@@ -17,55 +17,59 @@ struct ModernAnalysisDetailView: View {
     @State private var showFolderSheet = false
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
+        ScrollView {
+            VStack(spacing: 0) {
+                // Close Button
+                HStack {
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.gray)
+                            .font(.title2)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
+                VStack(spacing: 16) {
                     // Header Card with Image
                     HeaderCard(metric: metric)
-                    
+
                     // Overall Health Score
                     HealthScoreCard(score: metric.overallHealth, skinAge: metric.skinAge)
-                    
+
                     // Skin Metrics Grid
                     MetricsGridCard(metric: metric)
-                    
+
                     // Folder Info
                     if let folderName = metric.folderName {
                         FolderInfoCard(folderName: folderName, timestamp: metric.timestamp)
                     }
-                    
+
                     // Action Buttons
                     ActionButtonsCard(
                         onSaveToFolder: { showFolderSheet = true },
                         onDelete: { showDeleteAlert = true }
                     )
-                    
-                    Spacer(minLength: 40)
+
+                    Spacer(minLength: 20)
                 }
-                .padding(20)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
-                            .font(.title3)
-                    }
-                }
+        }
+        .background(Color(.systemGroupedBackground))
+        .alert("Delete Analysis", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                deleteAnalysis()
             }
-            .alert("Delete Analysis", isPresented: $showDeleteAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    deleteAnalysis()
-                }
-            } message: {
-                Text("Are you sure you want to delete this analysis? This action cannot be undone.")
-            }
-            .sheet(isPresented: $showFolderSheet) {
-                SaveToFolderSheet(metric: metric)
-            }
+        } message: {
+            Text("Are you sure you want to delete this analysis? This action cannot be undone.")
+        }
+        .sheet(isPresented: $showFolderSheet) {
+            SaveToFolderSheet(metric: metric)
         }
     }
     
@@ -86,7 +90,7 @@ struct ModernAnalysisDetailView: View {
 
 struct HeaderCard: View {
     let metric: SkinMetric
-    
+
     var body: some View {
         VStack(spacing: 0) {
             if let imageData = metric.imageData,
@@ -94,12 +98,12 @@ struct HeaderCard: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 280)
+                    .frame(height: 240)
                     .clipped()
             } else {
                 Rectangle()
                     .fill(Color.gray.opacity(0.2))
-                    .frame(height: 280)
+                    .frame(height: 240)
                     .overlay(
                         Image(systemName: "photo")
                             .font(.system(size: 50))
@@ -108,8 +112,8 @@ struct HeaderCard: View {
             }
         }
         .background(Color.cardBackground)
-        .cornerRadius(20)
-        .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
     }
 }
 
