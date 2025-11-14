@@ -65,7 +65,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Effect = "Allow"
         Action = [
           "bedrock:InvokeModel",
-          "bedrock:InvokeAgent"
+          "bedrock:InvokeAgent",
+          "bedrock-runtime:InvokeModel"  # For Claude 3.5 Sonnet
         ]
         Resource = "*"
       }
@@ -86,11 +87,11 @@ resource "aws_lambda_function" "analyze_skin" {
 
   environment {
     variables = {
-      ANALYSES_TABLE     = aws_dynamodb_table.analyses.name
-      PRODUCTS_TABLE     = aws_dynamodb_table.products.name
-      S3_BUCKET         = aws_s3_bucket.images.id
-      HUGGINGFACE_URL   = var.huggingface_api_url
-      BEDROCK_AGENT_ID  = ""
+      ANALYSES_TABLE             = aws_dynamodb_table.analyses.name
+      PRODUCTS_TABLE             = aws_dynamodb_table.products.name
+      S3_BUCKET                  = aws_s3_bucket.images.id
+      HUGGINGFACE_URL            = var.huggingface_api_url
+      BEDROCK_AGENT_ID           = ""
     }
   }
 

@@ -13,6 +13,8 @@ from decimal import Decimal
 import base64
 from io import BytesIO
 
+# No additional imports needed for basic HuggingFace analysis
+
 # AWS clients
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
@@ -196,10 +198,10 @@ def process_s3_upload(event):
         image_obj = s3.get_object(Bucket=bucket, Key=key)
         image_bytes = image_obj['Body'].read()
         
-        # Stage 1: Call Hugging Face for initial prediction
+        # Stage 1: Call Hugging Face for prediction
         print("Stage 1: Calling Hugging Face...")
         prediction = call_huggingface(image_bytes)
-        
+
         # Stage 2: Call Bedrock Agent for enhanced analysis (optional)
         enhanced = None
         if BEDROCK_AGENT_ID:
@@ -211,11 +213,11 @@ def process_s3_upload(event):
                 # Continue with just initial prediction
         else:
             print("Stage 2: Skipping Bedrock Agent (not configured)")
-        
+
         # Stage 3: Get product recommendations
         print("Stage 3: Getting product recommendations...")
         products = get_product_recommendations(prediction['condition'])
-        
+
         # Update DynamoDB with results
         update_analysis_results(
             analysis_id=analysis_id,
@@ -574,16 +576,16 @@ def update_analysis_results(analysis_id, user_id, prediction, enhanced, products
         if enhanced:
             update_data[':enhanced'] = enhanced
             update_expression += ", enhanced_analysis = :enhanced"
-        
+
         analyses_table.update_item(
             Key={'analysis_id': analysis_id, 'user_id': user_id},
             UpdateExpression=update_expression,
             ExpressionAttributeNames={'#status': 'status'},
             ExpressionAttributeValues=update_data
         )
-        
+
         print(f"Updated analysis {analysis_id} in DynamoDB")
-        
+
     except Exception as e:
         print(f"Error updating DynamoDB: {str(e)}")
         raise

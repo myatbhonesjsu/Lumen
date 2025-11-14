@@ -23,6 +23,14 @@ final class SkinMetric {
     var analysisNotes: String
     var folderName: String? // User-specified folder/collection name
 
+    // Dual Independent Analysis (HuggingFace + Claude)
+    var isClaudeValidated: Bool = false  // True if dual analysis was performed
+    var claudeConfidence: Double? = nil  // Claude's independent confidence
+    var agreesWithPrimary: Bool? = nil   // True if both models agree
+    var validationSeverity: String? = nil // Severity from Claude analysis
+    var validationInsights: String? = nil // Claude's clinical insights
+    var confidenceBoost: Double? = nil   // Confidence boost from consensus
+
     init(
         id: UUID = UUID(),
         timestamp: Date = Date(),
@@ -35,7 +43,13 @@ final class SkinMetric {
         darkcircleLevel: Double = 0,
         imageData: Data? = nil,
         analysisNotes: String = "",
-        folderName: String? = nil
+        folderName: String? = nil,
+        isClaudeValidated: Bool = false,
+        claudeConfidence: Double? = nil,
+        agreesWithPrimary: Bool? = nil,
+        validationSeverity: String? = nil,
+        validationInsights: String? = nil,
+        confidenceBoost: Double? = nil
     ) {
         self.id = id
         self.timestamp = timestamp
@@ -49,5 +63,11 @@ final class SkinMetric {
         self.imageData = imageData
         self.analysisNotes = analysisNotes
         self.folderName = folderName
+        self.isClaudeValidated = isClaudeValidated
+        self.claudeConfidence = claudeConfidence
+        self.agreesWithPrimary = agreesWithPrimary
+        self.validationSeverity = validationSeverity
+        self.validationInsights = validationInsights
+        self.confidenceBoost = confidenceBoost
     }
 }
