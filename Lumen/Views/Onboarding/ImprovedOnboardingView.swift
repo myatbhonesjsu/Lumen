@@ -31,7 +31,7 @@ struct ImprovedOnboardingView: View {
 
         return validAge && validHeight && validWeight
     }
-    
+
     var body: some View {
         ZStack {
             Color(.systemBackground)
@@ -57,7 +57,7 @@ struct ImprovedOnboardingView: View {
                     
                     GoalsPage(selectedGoal: $selectedGoal)
                         .tag(3)
-                    
+
                     BodyMetricsPage(age: $age, height: $height, weight: $weight)
                         .tag(4)
                 }
@@ -220,6 +220,7 @@ struct NameInputPage: View {
 
             VStack(spacing: 12) {
                 TextField("Your name", text: $name)
+                    .accessibilityIdentifier("onboarding.nameField")
                     .font(.title3)
                     .textFieldStyle(.plain)
                     .multilineTextAlignment(.center)
@@ -282,18 +283,21 @@ struct BodyMetricsPage: View {
 
             VStack(spacing: 16) {
                 TextField("Age (years)", text: $age)
+                    .accessibilityIdentifier("metrics.age")
                     .keyboardType(.numberPad)
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
 
                 TextField("Height (cm)", text: $height)
+                    .accessibilityIdentifier("metrics.height")
                     .keyboardType(.decimalPad)
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
 
                 TextField("Weight (kg)", text: $weight)
+                    .accessibilityIdentifier("metrics.weight")
                     .keyboardType(.decimalPad)
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
@@ -389,6 +393,7 @@ struct ConcernCard: View {
                     .stroke(isSelected ? Color.yellow : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
             )
         }
+        .accessibilityIdentifier("concern.\(concern.rawValue)")
         .buttonStyle(.plain)
     }
 }
@@ -477,6 +482,7 @@ struct GoalCard: View {
                     .stroke(isSelected ? Color.yellow : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
             )
         }
+        .accessibilityIdentifier("goal.\(goal.rawValue)")
         .buttonStyle(.plain)
     }
 }
@@ -518,6 +524,7 @@ struct NavigationControls: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
                 }
+                .accessibilityIdentifier("nav.back")
             }
 
             Spacer()
@@ -543,6 +550,7 @@ struct NavigationControls: View {
                 .background(canProceed ? Color.yellow : Color.gray.opacity(0.3))
                 .cornerRadius(12)
             }
+            .accessibilityIdentifier(currentPage == 4 ? "nav.getStarted" : "nav.next")
             .disabled(!canProceed)
         }
         .padding(.horizontal, 24)

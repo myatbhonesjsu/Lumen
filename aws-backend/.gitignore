@@ -1,0 +1,14 @@
+
+# AWS Backend
+aws-backend/lambda/build/
+aws-backend/lambda/learning_hub_build/
+aws-backend/lambda/*.zip
+aws-backend/terraform/tfplan
+aws-backend/outputs.json
+aws-backend/outputs.txt
+
+# Test and temporary files
+aws-backend/test-*.json
+aws-backend/test-*.py
+aws-backend/response-*.json
+aws-backend/verify-*.py

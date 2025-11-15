@@ -7,34 +7,71 @@
 
 import SwiftUI
 
+private struct TabBarHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 struct MainTabView: View {
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
     @State private var selectedTab = 0
     @State private var showCamera = false
+    @State private var tabBarHeight: CGFloat = 0
+    @State private var learningHubTab: EnhancedLearningHubView.LearningTab? = nil
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
-                ImprovedHomeView()
+        GeometryReader { geometry in
+            ZStack {
+                TabView(selection: $selectedTab) {
+                    ImprovedHomeView(
+                        selectedTab: $selectedTab,
+                        learningHubTab: $learningHubTab
+                    )
                     .tag(0)
-
-                HistoryView()
-                    .tag(1)
-
-                Color.clear
-                    .tag(2)
-
-                LearningHubView()
+                    HistoryView()
+                        .tag(1)
+                    Color.clear
+                        .tag(2)
+                    EnhancedLearningHubView(
+                        selectedMainTab: $selectedTab,
+                        tabBarHeight: tabBarHeight,
+                        requestedTab: $learningHubTab
+                    )
                     .tag(3)
-
-                SettingsView()
-                    .tag(4)
+                    SettingsView()
+                        .tag(4)
+                }
+                .onChange(of: selectedTab) { oldValue, newValue in
+                    // Reset learning hub tab when navigating away
+                    if oldValue == 3 && newValue != 3 {
+                        learningHubTab = nil
+                    }
+                }
+                .toolbar(selectedTab == 3 ? .hidden : .visible, for: .tabBar)
             }
-
-            // Custom Tab Bar
-            CustomTabBar(selectedTab: $selectedTab, showCamera: $showCamera)
-        }
-        .sheet(isPresented: $showCamera) {
-            CameraView()
+            .animation(.easeInOut(duration: 0.2), value: selectedTab)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                CustomTabBar(
+                    selectedTab: $selectedTab,
+                    showCamera: $showCamera,
+                    includeCamera: selectedTab != 3
+                )
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .preference(key: TabBarHeightPreferenceKey.self, value: proxy.size.height)
+                    }
+                )
+            }
+            .sheet(isPresented: $showCamera) {
+                CameraView()
+            }
+            .onPreferenceChange(TabBarHeightPreferenceKey.self) { height in
+                tabBarHeight = height
+            }
+            .preferredColorScheme(appearanceMode.colorScheme)
         }
     }
 }
@@ -42,6 +79,7 @@ struct MainTabView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @Binding var showCamera: Bool
+    var includeCamera: Bool
 
     var body: some View {
         HStack(spacing: 0) {
@@ -63,31 +101,32 @@ struct CustomTabBar: View {
                 selectedTab = 1
             }
 
-            // Center Camera Button
-            Button(action: {
-                HapticManager.shared.medium()
-                showCamera = true
-            }) {
-                ZStack {
-                    // Gradient background
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.yellow, Color.yellow.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+            if includeCamera {
+                // Center Camera Button
+                Button(action: {
+                    HapticManager.shared.medium()
+                    showCamera = true
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.yellow, Color.yellow.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .frame(width: 64, height: 64)
-                        .shadow(color: .yellow.opacity(0.4), radius: 10, y: 3)
+                            .frame(width: 64, height: 64)
+                            .shadow(color: .yellow.opacity(0.4), radius: 10, y: 3)
 
-                    Image(systemName: "camera.fill")
-                        .font(.title2)
-                        .foregroundColor(.white)
+                        Image(systemName: "camera.fill")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                    }
                 }
+                .offset(y: -24)
+                .frame(maxWidth: .infinity)
             }
-            .offset(y: -24)
-            .frame(maxWidth: .infinity)
 
             TabBarButton(
                 icon: "book.fill",
@@ -143,6 +182,7 @@ struct TabBarButton: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
     }
 }
+
 
 #Preview {
     MainTabView()

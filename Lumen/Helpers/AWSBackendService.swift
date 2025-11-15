@@ -10,7 +10,7 @@ import UIKit
 
 // MARK: - Configuration
 enum AWSConfig {
-    static let apiEndpoint = "https://ocbpgt6ebc.execute-api.us-east-1.amazonaws.com/dev"
+    static let apiEndpoint = "https://ylt3xkf8mf.execute-api.us-east-1.amazonaws.com/dev"
     static let requestTimeout: TimeInterval = 60.0
 
     #if DEBUG
@@ -100,6 +100,27 @@ class AWSBackendService {
 
     private init() {}
 
+    // MARK: - Authentication Helper
+
+    /**
+     * Add Cognito authentication header to a request
+     */
+    private func addAuthHeader(to request: inout URLRequest) {
+        if let idToken = CognitoAuthService.shared.getIdToken() {
+            request.setValue(idToken, forHTTPHeaderField: "Authorization")
+            log("🔐 Added authentication token to request")
+            #if DEBUG
+            // Log first/last few characters of token for debugging
+            let tokenPreview = String(idToken.prefix(20)) + "..." + String(idToken.suffix(20))
+            log("   Token preview: \(tokenPreview)")
+            log("   Auth Status: \(CognitoAuthService.shared.statusDescription)")
+            #endif
+        } else {
+            log("⚠️ No authentication token available - request may fail")
+            log("   Auth Status: \(CognitoAuthService.shared.statusDescription)")
+        }
+    }
+
     // MARK: - Nonisolated Decoding Helpers
 
     nonisolated private func decodeUploadResponse(from data: Data) throws -> UploadResponse {
@@ -169,10 +190,13 @@ class AWSBackendService {
             completion(.failure(AWSBackendError.invalidURL))
             return
         }
-        
+
         var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
         request.httpMethod = "GET"
-        
+
+        // Add Cognito authentication
+        addAuthHeader(to: &request)
+
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(AWSBackendError.networkError(error)))
@@ -211,7 +235,9 @@ class AWSBackendService {
         var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("anonymous", forHTTPHeaderField: "x-user-id")
+
+        // Add Cognito authentication
+        addAuthHeader(to: &request)
 
         log(" Requesting upload URL from: \(url.absoluteString)")
 
@@ -222,11 +248,23 @@ class AWSBackendService {
                 return
             }
 
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode),
-                  let data = data else {
-                log(" Invalid response from server")
+            guard let httpResponse = response as? HTTPURLResponse else {
+                log(" Invalid HTTP response")
                 completion(.failure(AWSBackendError.uploadFailed("Invalid response")))
+                return
+            }
+
+            log(" HTTP Status Code: \(httpResponse.statusCode)")
+
+            // Log response body for debugging
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                log(" Response: \(responseString)")
+            }
+
+            guard (200...299).contains(httpResponse.statusCode), let data = data else {
+                let errorMessage = data.flatMap { String(data: $0, encoding: .utf8) } ?? "No response body"
+                log(" Server error (\(httpResponse.statusCode)): \(errorMessage)")
+                completion(.failure(AWSBackendError.uploadFailed("HTTP \(httpResponse.statusCode): \(errorMessage)")))
                 return
             }
 
@@ -351,6 +389,9 @@ class AWSBackendService {
 
         var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
         request.httpMethod = "GET"
+
+        // Add Cognito authentication
+        addAuthHeader(to: &request)
 
         log("GET request: \(url.absoluteString)")
 

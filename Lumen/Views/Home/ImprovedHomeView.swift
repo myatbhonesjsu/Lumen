@@ -9,11 +9,15 @@ import SwiftUI
 import SwiftData
 
 struct ImprovedHomeView: View {
+    @Binding var selectedTab: Int
+    @Binding var learningHubTab: EnhancedLearningHubView.LearningTab?
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \SkinMetric.timestamp, order: .reverse) private var skinMetrics: [SkinMetric]
     @Query private var userProfiles: [UserProfile]
+    @Query private var routines: [DailyRoutine]
     @State private var showCamera = false
     @State private var showAnalysis = false
+    @State private var showRoutine = false
     @State private var completedToday: Set<String> = []
 
     var latestMetric: SkinMetric? {
@@ -33,67 +37,83 @@ struct ImprovedHomeView: View {
         }
     }
 
+    var todayRoutine: DailyRoutine? {
+        let today = Calendar.current.startOfDay(for: Date())
+        return routines.first(where: {
+            Calendar.current.isDate($0.date, inSameDayAs: today)
+        })
+    }
+
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Greeting Header
-                        GreetingHeader(greeting: greeting, userName: userName)
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Greeting Header
+                    GreetingHeader(greeting: greeting, userName: userName)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+
+                    // Today's Focus Card
+                    TodaysFocusCard(
+                        latestMetric: latestMetric,
+                        todayRoutine: todayRoutine,
+                        onTap: { showRoutine = true }
+                    )
+                    .padding(.horizontal, 20)
+
+                    // Quick Stats
+                    if let metric = latestMetric {
+                        QuickStatsCard(metric: metric)
                             .padding(.horizontal, 20)
-                            .padding(.top, 8)
-
-                        // Today's Focus Card
-                        TodaysFocusCard(latestMetric: latestMetric)
-                            .padding(.horizontal, 20)
-
-                        // Quick Stats
-                        if let metric = latestMetric {
-                            QuickStatsCard(metric: metric)
-                                .padding(.horizontal, 20)
-                        }
-
-                        // Daily Checklist
-                        DailyChecklistCard(completedItems: $completedToday)
-                            .padding(.horizontal, 20)
-
-                        // This Week's Progress
-                        if skinMetrics.count >= 2 {
-                            WeeklyProgressCard(metrics: Array(skinMetrics.prefix(7)))
-                                .padding(.horizontal, 20)
-                        }
-
-                        // Quick Actions
-                        QuickActionsGrid(showCamera: $showCamera)
-                            .padding(.horizontal, 20)
-
-                        // Recent Analysis
-                        if let metric = latestMetric {
-                            RecentAnalysisCard(metric: metric, showAnalysis: $showAnalysis)
-                                .padding(.horizontal, 20)
-                        } else {
-                            EmptyStateCardImproved(showCamera: $showCamera)
-                                .padding(.horizontal, 20)
-                        }
-
-                        Spacer(minLength: 100)
                     }
-                    .padding(.top, 16)
-                }
-                .background(Color(.systemGroupedBackground))
 
-                // Floating Action Button
-                FloatingActionButton(showCamera: $showCamera)
-                    .padding(24)
+                    // AI Learning Hub Shortcut
+                    AILearningShortcutCard(
+                        selectedTab: $selectedTab,
+                        learningHubTab: $learningHubTab
+                    )
+                    .padding(.horizontal, 20)
+
+                    // Progress Tracking
+                    if skinMetrics.count >= 2 {
+                        ProgressTrackingCard(metrics: Array(skinMetrics.prefix(30)))
+                            .padding(.horizontal, 20)
+                    }
+
+                    // Skin Analysis Actions
+                    SkinAnalysisActionsCard(
+                        showCamera: $showCamera,
+                        selectedTab: $selectedTab,
+                        learningHubTab: $learningHubTab
+                    )
+                    .padding(.horizontal, 20)
+
+                    // Recent Analysis
+                    if let metric = latestMetric {
+                        RecentAnalysisCard(metric: metric, showAnalysis: $showAnalysis)
+                            .padding(.horizontal, 20)
+                    } else {
+                        EmptyStateCardImproved(showCamera: $showCamera)
+                            .padding(.horizontal, 20)
+                    }
+
+                    Spacer(minLength: 100)
+                }
+                .accessibilityIdentifier("home.screen")
+                .padding(.top, 16)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationBarHidden(true)
             .sheet(isPresented: $showCamera) {
                 CameraView()
             }
             .sheet(isPresented: $showAnalysis) {
                 if let metric = latestMetric {
-                    ImprovedAnalysisDetailView(metric: metric)
+                    ModernAnalysisDetailView(metric: metric)
                 }
+            }
+            .sheet(isPresented: $showRoutine) {
+                DailyRoutineView()
             }
         }
     }
@@ -136,63 +156,94 @@ struct GreetingHeader: View {
 
 struct TodaysFocusCard: View {
     let latestMetric: SkinMetric?
+    let todayRoutine: DailyRoutine?
+    let onTap: () -> Void
 
-    var todaysTip: (icon: String, title: String, description: String) {
-        guard let metric = latestMetric else {
-            return ("sun.max.fill", "Start Your Journey", "Take your first skin analysis photo today")
-        }
+    private var currentHour: Int {
+        Calendar.current.component(.hour, from: Date())
+    }
 
-        if metric.drynessLevel > 50 {
-            return ("drop.fill", "Focus: Hydration", "Your skin needs extra moisture today. Use a hydrating serum.")
-        } else if metric.acneLevel > 40 {
-            return ("sparkles", "Focus: Clear Skin", "Keep your routine consistent. Avoid touching your face.")
+    private var isEvening: Bool {
+        currentHour >= 17
+    }
+
+    private var routineCompletion: Int {
+        guard let routine = todayRoutine else { return 0 }
+        return isEvening ? routine.eveningCompletion : routine.morningCompletion
+    }
+
+    private var cardContent: (icon: String, title: String, description: String) {
+        if todayRoutine != nil {
+            let timeOfDay = isEvening ? "Evening" : "Morning"
+            if routineCompletion == 100 {
+                return ("checkmark.circle.fill", "\(timeOfDay) Routine Complete!", "Great job! Your skin will thank you.")
+            } else if routineCompletion > 0 {
+                return ("list.bullet.circle.fill", "\(timeOfDay) Routine: \(routineCompletion)%", "Tap to complete your \(timeOfDay.lowercased()) skincare steps")
+            } else {
+                return ("sparkles", "Start Your \(timeOfDay) Routine", "Build consistent skincare habits. Tap to begin!")
+            }
         } else {
-            return ("leaf.fill", "Focus: Maintain", "Your skin looks good! Keep up your current routine.")
+            return ("list.bullet.clipboard.fill", "Track Your Routine", "Start building consistent skincare habits today")
         }
     }
 
     var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(LinearGradient(
-                        colors: [Color.yellow.opacity(0.3), Color.yellow.opacity(0.1)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 60, height: 60)
+        Button(action: {
+            HapticManager.shared.light()
+            onTap()
+        }) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: [Color.yellow.opacity(0.3), Color.yellow.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 60, height: 60)
 
-                Image(systemName: todaysTip.icon)
-                    .font(.title2)
-                    .foregroundStyle(.yellow)
+                    if routineCompletion > 0 && routineCompletion < 100 {
+                        Circle()
+                            .trim(from: 0, to: CGFloat(routineCompletion) / 100)
+                            .stroke(Color.yellow, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                            .frame(width: 60, height: 60)
+                            .rotationEffect(.degrees(-90))
+                    }
+
+                    Image(systemName: cardContent.icon)
+                        .font(.title2)
+                        .foregroundStyle(.yellow)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(cardContent.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+
+                    Text(cardContent.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
             }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(todaysTip.title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-
-                Text(todaysTip.description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
-        }
-        .padding(20)
-        .background(
-            LinearGradient(
-                colors: [Color.yellow.opacity(0.15), Color.yellow.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+            .padding(20)
+            .background(
+                LinearGradient(
+                    colors: [Color.yellow.opacity(0.15), Color.yellow.opacity(0.05)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
             )
-        )
-        .cornerRadius(16)
-        .shadow(color: .yellow.opacity(0.1), radius: 10, y: 4)
+            .cornerRadius(16)
+            .shadow(color: .yellow.opacity(0.1), radius: 10, y: 4)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -241,267 +292,272 @@ struct QuickStatsCard: View {
     }
 }
 
-// MARK: - Daily Checklist Card
+// MARK: - AI Learning Hub Shortcut
 
-struct DailyChecklistCard: View {
-    @Binding var completedItems: Set<String>
-
-    let morningRoutine = [
-        ("Cleanser", "facemask.fill"),
-        ("Toner", "drop.fill"),
-        ("Moisturizer", "sparkles"),
-        ("Sunscreen", "sun.max.fill")
-    ]
-
-    var progress: Double {
-        Double(completedItems.count) / Double(morningRoutine.count)
-    }
+struct AILearningShortcutCard: View {
+    @Binding var selectedTab: Int
+    @Binding var learningHubTab: EnhancedLearningHubView.LearningTab?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Morning Routine")
-                        .font(.headline)
-                        .fontWeight(.bold)
+        Button(action: {
+            HapticManager.shared.tabSelection()
+            learningHubTab = .chat  // Set to chat tab
+            selectedTab = 3  // Navigate to Learning Hub tab
+        }) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: [Color.yellow.opacity(0.3), Color.yellow.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 60, height: 60)
 
-                    Text("\(completedItems.count)/\(morningRoutine.count) completed")
+                    Image(systemName: "brain.head.profile")
+                        .font(.title2)
+                        .foregroundStyle(.yellow)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Ask AI Assistant")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+
+                    Text("Get personalized skincare advice")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
 
                 Spacer()
 
-                // Progress Circle
-                ZStack {
-                    Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 4)
-                        .frame(width: 40, height: 40)
-
-                    Circle()
-                        .trim(from: 0, to: progress)
-                        .stroke(Color.yellow, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                        .frame(width: 40, height: 40)
-                        .rotationEffect(.degrees(-90))
-
-                    Text("\(Int(progress * 100))%")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                }
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.gray)
             }
-
-            VStack(spacing: 12) {
-                ForEach(morningRoutine, id: \.0) { item in
-                    ChecklistItem(
-                        title: item.0,
-                        icon: item.1,
-                        isCompleted: completedItems.contains(item.0)
-                    ) {
-                        withAnimation(.spring()) {
-                            if completedItems.contains(item.0) {
-                                completedItems.remove(item.0)
-                            } else {
-                                completedItems.insert(item.0)
-                                // Haptic feedback would go here
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .padding(20)
-        .background(Color.cardBackground)
-        .cornerRadius(16)
-        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
-    }
-}
-
-struct ChecklistItem: View {
-    let title: String
-    let icon: String
-    let isCompleted: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundColor(isCompleted ? .green : .gray.opacity(0.3))
-
-                Image(systemName: icon)
-                    .font(.body)
-                    .foregroundColor(isCompleted ? .secondary : .gray)
-
-                Text(title)
-                    .font(.body)
-                    .foregroundColor(isCompleted ? .secondary : .primary)
-                    .strikethrough(isCompleted)
-
-                Spacer()
-            }
-            .padding(12)
-            .background(isCompleted ? Color.green.opacity(0.05) : Color.gray.opacity(0.05))
-            .cornerRadius(10)
+            .padding(20)
+            .background(Color.cardBackground)
+            .cornerRadius(16)
+            .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Weekly Progress Card
+// MARK: - Progress Tracking Card
 
-struct WeeklyProgressCard: View {
+struct ProgressTrackingCard: View {
     let metrics: [SkinMetric]
-
-    var weeklyAverage: Double {
-        guard !metrics.isEmpty else { return 0 }
-        return metrics.map { $0.overallHealth }.reduce(0, +) / Double(metrics.count)
-    }
-
-    var trend: String {
-        guard metrics.count >= 2 else { return "neutral" }
-        let latest = metrics[0].overallHealth
-        let previous = metrics[1].overallHealth
-        if latest > previous + 3 {
-            return "up"
-        } else if latest < previous - 3 {
-            return "down"
+    
+    private var skinAgeTrend: SkinAgeTrend {
+        guard !metrics.isEmpty else {
+            return SkinAgeTrend(trend: .insufficient, change: 0, message: "No data")
         }
-        return "stable"
+        return ProgressTrackingService.calculateSkinAgeTrend(metrics: metrics)
     }
-
-    var trendColor: Color {
-        switch trend {
-        case "up": return .green
-        case "down": return .red
-        default: return .orange
+    
+    private var healthProgress: HealthProgress {
+        guard !metrics.isEmpty else {
+            return HealthProgress(percentChange: 0, isImproving: false, message: "No data")
+        }
+        return ProgressTrackingService.calculateHealthProgress(metrics: metrics)
+    }
+    
+    private var trendColor: Color {
+        switch skinAgeTrend.trend {
+        case .improving: return .green
+        case .declining: return .red
+        case .stable: return .orange
+        case .insufficient: return .gray
         }
     }
-
-    var trendIcon: String {
-        switch trend {
-        case "up": return "arrow.up.right"
-        case "down": return "arrow.down.right"
-        default: return "arrow.right"
+    
+    private var trendIcon: String {
+        switch skinAgeTrend.trend {
+        case .improving: return "arrow.down.right.circle.fill"
+        case .declining: return "arrow.up.right.circle.fill"
+        case .stable: return "arrow.right.circle.fill"
+        case .insufficient: return "chart.line.flattrend.xyaxis"
         }
     }
-
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("This Week")
-                    .font(.headline)
-                    .fontWeight(.bold)
-
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Progress Tracking")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                    
+                    Text("\(metrics.count) analyses")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
                 Spacer()
-
-                HStack(spacing: 4) {
+                
+                HStack(spacing: 6) {
                     Image(systemName: trendIcon)
-                    Text(trend.capitalized)
+                    Text(skinAgeTrend.trend == .improving ? "Improving" : 
+                         skinAgeTrend.trend == .declining ? "Declining" : "Stable")
                 }
                 .font(.subheadline)
+                .fontWeight(.semibold)
                 .foregroundColor(trendColor)
             }
-
+            
+            Divider()
+            
+            // Skin Age Trend
             HStack(spacing: 12) {
-                ForEach(Array(metrics.prefix(7).enumerated()), id: \.offset) { index, metric in
-                    VStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.yellow.opacity(0.3))
-                            .frame(width: 32, height: CGFloat(metric.overallHealth) * 1.2)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.yellow)
-                                    .frame(height: CGFloat(metric.overallHealth) * 1.2),
-                                alignment: .bottom
-                            )
-
-                        Text(dayLabel(for: index))
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Skin Age")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(spacing: 4) {
+                        Text("\(metrics.first?.skinAge ?? 0)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        if skinAgeTrend.change != 0 {
+                            HStack(spacing: 2) {
+                                Image(systemName: skinAgeTrend.change < 0 ? "arrow.down" : "arrow.up")
+                                    .font(.caption)
+                                Text("\(abs(skinAgeTrend.change))")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(skinAgeTrend.change < 0 ? .green : .red)
+                        }
+                    }
+                    
+                    Text(skinAgeTrend.message)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+                
+                Spacer()
+                
+                // Mini chart
+                HStack(spacing: 4) {
+                    ForEach(Array(metrics.prefix(7).enumerated()), id: \.offset) { index, metric in
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.yellow)
+                            .frame(width: 6, height: CGFloat(metric.overallHealth) * 0.6)
+                            .opacity(index == 0 ? 1.0 : 0.5)
                     }
                 }
+                .frame(height: 60)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 120)
         }
         .padding(20)
         .background(Color.cardBackground)
         .cornerRadius(16)
         .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
-
-    private func dayLabel(for index: Int) -> String {
-        let days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        let today = Calendar.current.component(.weekday, from: Date())
-        let adjustedIndex = (today - 2 - index + 7) % 7
-        return days[adjustedIndex]
-    }
 }
 
-// MARK: - Quick Actions Grid
+// MARK: - Skin Analysis Actions Card
 
-struct QuickActionsGrid: View {
+struct SkinAnalysisActionsCard: View {
     @Binding var showCamera: Bool
+    @Binding var selectedTab: Int
+    @Binding var learningHubTab: EnhancedLearningHubView.LearningTab?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Quick Actions")
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Skin Analysis")
                 .font(.headline)
                 .fontWeight(.bold)
 
             HStack(spacing: 12) {
-                QuickActionButton(
-                    icon: "drop.fill",
-                    title: "Water",
+                AnalysisActionButton(
+                    icon: "camera.fill",
+                    title: "New Scan",
+                    subtitle: "Analyze skin",
+                    color: .yellow
+                ) {
+                    HapticManager.shared.light()
+                    showCamera = true
+                }
+
+                AnalysisActionButton(
+                    icon: "clock.arrow.circlepath",
+                    title: "History",
+                    subtitle: "Past results",
                     color: .blue
                 ) {
-                    // Track water
+                    HapticManager.shared.tabSelection()
+                    selectedTab = 1  // Navigate to History tab
+                }
+            }
+
+            HStack(spacing: 12) {
+                AnalysisActionButton(
+                    icon: "sparkles",
+                    title: "AI Chat",
+                    subtitle: "Ask questions",
+                    color: .purple
+                ) {
+                    HapticManager.shared.tabSelection()
+                    learningHubTab = .chat  // Set to chat tab
+                    selectedTab = 3  // Navigate to Learning Hub
                 }
 
-                QuickActionButton(
-                    icon: "note.text",
-                    title: "Notes",
+                AnalysisActionButton(
+                    icon: "book.fill",
+                    title: "Learn",
+                    subtitle: "Read articles",
                     color: .orange
                 ) {
-                    // Add note
-                }
-
-                QuickActionButton(
-                    icon: "chart.bar.fill",
-                    title: "Progress",
-                    color: .green
-                ) {
-                    // View progress
+                    HapticManager.shared.tabSelection()
+                    learningHubTab = .articles  // Set to articles tab
+                    selectedTab = 3  // Navigate to Learning Hub
                 }
             }
         }
+        .padding(20)
+        .background(Color.cardBackground)
+        .cornerRadius(16)
+        .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
     }
 }
 
-struct QuickActionButton: View {
+struct AnalysisActionButton: View {
     let icon: String
     let title: String
+    let subtitle: String
     let color: Color
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(color)
 
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
             .background(Color.cardBackground)
             .cornerRadius(12)
-            .shadow(color: Color.adaptiveShadow, radius: 5, y: 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(color.opacity(0.2), lineWidth: 1)
+            )
         }
     }
 }
@@ -516,9 +572,21 @@ struct RecentAnalysisCard: View {
         Button(action: { showAnalysis = true }) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Recent Scan")
-                        .font(.headline)
-                        .fontWeight(.bold)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Recent Scan")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        
+                        if let folderName = metric.folderName {
+                            HStack(spacing: 4) {
+                                Image(systemName: "folder.fill")
+                                    .font(.caption2)
+                                Text(folderName)
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.yellow)
+                        }
+                    }
 
                     Spacer()
 
@@ -643,34 +711,11 @@ struct EmptyStateCardImproved: View {
     }
 }
 
-// MARK: - Floating Action Button
-
-struct FloatingActionButton: View {
-    @Binding var showCamera: Bool
-
-    var body: some View {
-        Button(action: { showCamera = true }) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.yellow, Color.yellow.opacity(0.8)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 64, height: 64)
-                    .shadow(color: .yellow.opacity(0.4), radius: 15, y: 5)
-
-                Image(systemName: "camera.fill")
-                    .font(.title2)
-                    .foregroundColor(.white)
-            }
-        }
-    }
-}
 
 #Preview {
-    ImprovedHomeView()
-        .modelContainer(for: [SkinMetric.self, UserProfile.self], inMemory: true)
+    ImprovedHomeView(
+        selectedTab: .constant(0),
+        learningHubTab: .constant(nil)
+    )
+    .modelContainer(for: [SkinMetric.self, UserProfile.self, DailyRoutine.self], inMemory: true)
 }

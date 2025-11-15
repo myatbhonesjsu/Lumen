@@ -19,15 +19,18 @@ struct AnalysisProcessingView: View {
 
     let onDismiss: () -> Void
 
+    @State private var savedMetric: SkinMetric?
+
     var topConditions: [(String, Double)] {
         guard let result = analysisResult else { return [] }
 
         // Filter out the primary condition and sort by confidence
+        // Using 15% threshold for secondary conditions
         let otherConditions = result.allConditions
             .filter { $0.key != result.condition }
             .sorted { $0.value > $1.value }
             .prefix(3)
-            .filter { $0.value >= 0.3 }
+            .filter { $0.value >= 0.15 }
 
         return Array(otherConditions)
     }
@@ -85,6 +88,9 @@ struct AnalysisProcessingView: View {
 
                 Spacer()
             }
+        }
+        .sheet(item: $savedMetric) { metric in
+            FolderNamePromptSheet(metric: metric, onComplete: onDismiss)
         }
     }
 
@@ -162,32 +168,48 @@ struct AnalysisProcessingView: View {
                 .padding(.horizontal)
             }
 
-            // Other detected conditions
-            if !topConditions.isEmpty {
+            // Recommended Actions for Primary Condition
+            if !result.getSolutions(for: result.condition).isEmpty {
+                let primarySolutions = result.getSolutions(for: result.condition)
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Other Detected Conditions")
+                    Text("Recommended Actions")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    ForEach(Array(primarySolutions.prefix(4).enumerated()), id: \.offset) { index, solution in
+                        HStack(alignment: .top, spacing: 12) {
+                            Text("\(index + 1).")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.yellow)
+                            
+                            Text(solution)
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical, 12)
+                .background(Color.yellow.opacity(0.1))
+                .cornerRadius(12)
+                .padding(.horizontal)
+            }
+            
+            // Other detected conditions with solutions
+            if !topConditions.isEmpty {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Other Concerns Detected")
                         .font(.headline)
                         .padding(.horizontal)
 
                     ForEach(topConditions, id: \.0) { condition, confidence in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(condition.replacingOccurrences(of: "_", with: " ").capitalized)
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-
-                                ProgressView(value: confidence)
-                                    .tint(confidenceColor(for: confidence))
-                            }
-
-                            Spacer()
-
-                            Text("\(Int(confidence * 100))%")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.horizontal)
+                        secondaryConditionCard(
+                            name: condition,
+                            confidence: confidence,
+                            solutions: result.getSolutions(for: condition)
+                        )
                     }
                 }
                 .padding(.vertical, 8)
@@ -209,7 +231,7 @@ struct AnalysisProcessingView: View {
             // Save button
             Button(action: {
                 saveAnalysis(result: result)
-                onDismiss()
+                // Don't call onDismiss() here - let folder prompt handle dismissal
             }) {
                 Text("Save Analysis")
                     .fontWeight(.semibold)
@@ -224,6 +246,56 @@ struct AnalysisProcessingView: View {
         .padding(.vertical)
     }
 
+    // MARK: - Secondary Condition Card
+    
+    @ViewBuilder
+    private func secondaryConditionCard(name: String, confidence: Double, solutions: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Condition header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(name.replacingOccurrences(of: "_", with: " ").capitalized)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    
+                    Text("\(Int(confidence * 100))% detected")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title3)
+                    .foregroundColor(.orange.opacity(0.7))
+            }
+            
+            // Solutions
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(Array(solutions.prefix(2).enumerated()), id: \.offset) { index, solution in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                        
+                        Text(solution)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color.orange.opacity(0.05))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+        )
+        .padding(.horizontal)
+    }
+    
     @ViewBuilder
     private func productCard(product: AnalysisResult.Product) -> some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -352,12 +424,17 @@ struct AnalysisProcessingView: View {
             drynessLevel: result.condition.lowercased().contains("dry") ? 70.0 : 30.0,
             moistureLevel: result.confidence * 80,
             pigmentationLevel: result.condition.lowercased().contains("spot") ? 60.0 : 25.0,
+            darkcircleLevel: result.condition.lowercased().contains("dark") || result.condition.lowercased().contains("eye") ? 60.0 : 20.0,
             imageData: imageData,
-            analysisNotes: buildAnalysisNotes(result: result)
+            analysisNotes: buildAnalysisNotes(result: result),
+            folderName: nil // Will be set when user names it
         )
 
         modelContext.insert(metric)
         try? modelContext.save()
+
+        // Using sheet(item:) ensures the metric is available when sheet renders
+        savedMetric = metric
     }
 
     private func buildAnalysisNotes(result: AnalysisResult) -> String {

@@ -175,3 +175,59 @@ terraform.tfstate
 terraform.tfstate.backup
 *.tfplan
 tfplan
+
+## Development documentation (feature summaries, deployment notes)
+*_SUMMARY.md
+*_FEATURE.md
+*_IMPLEMENTATION.md
+*_GUIDE.md
+*_FIX.md
+*_FIXES.md
+*_IMPROVEMENTS.md
+*_STATUS.md
+*_DEPLOYMENT.md
+*_COMPLETE.md
+BEDROCK_*.md
+QUICK_DEPLOY.md
+AWS_ARCHITECTURE.md
+AWS_DEPLOYMENT_SUMMARY.md
+PERSONALIZED_*.md
+COMPLETE_*.md
+IMPROVED_*.md
+
+## Test and response files
+test-*.json
+test-*.py
+test-*.sh
+test_*.py
+test_*.sh
+response*.json
+verify-*.py
+*.test.js
+*-test.json
+
+## Lambda deployment artifacts
+aws-backend/lambda/*.zip
+aws-backend/lambda/package/
+aws-backend/**/*.zip
+
+## Virtual environments
+venv/
+.venv/
+virtualenv/
+
+## IDE
+.idea/
+*.swp
+*.swo
+*~
+
+## Logs
+*.log
+
+## OS
+Thumbs.db
+
+## Documentation archive
+docs/
+

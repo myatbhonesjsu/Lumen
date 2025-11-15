@@ -17,6 +17,7 @@ from io import BytesIO
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 bedrock = boto3.client('bedrock-agent-runtime', region_name='us-east-1')
+opensearch = boto3.client('opensearchserverless')
 
 # Environment variables
 ANALYSES_TABLE = os.environ['ANALYSES_TABLE']
@@ -24,39 +25,81 @@ PRODUCTS_TABLE = os.environ['PRODUCTS_TABLE']
 S3_BUCKET = os.environ['S3_BUCKET']
 HUGGINGFACE_URL = os.environ['HUGGINGFACE_URL']
 BEDROCK_AGENT_ID = os.environ.get('BEDROCK_AGENT_ID', '')
+OPENSEARCH_ENDPOINT = os.environ.get('OPENSEARCH_ENDPOINT', '')
 
 # DynamoDB tables
 analyses_table = dynamodb.Table(ANALYSES_TABLE)
 products_table = dynamodb.Table(PRODUCTS_TABLE)
 
 
+def get_user_id_from_event(event):
+    """Extract user ID from Cognito authorizer context"""
+    try:
+        # Log the event structure for debugging
+        print(f"Event keys: {list(event.keys())}")
+
+        # Cognito authorizer adds claims to request context
+        request_context = event.get('requestContext', {})
+        print(f"Request context keys: {list(request_context.keys())}")
+
+        authorizer = request_context.get('authorizer', {})
+        print(f"Authorizer keys: {list(authorizer.keys())}")
+
+        # Get user ID from Cognito claims
+        # Cognito provides 'sub' (subject) claim as unique user identifier
+        claims = authorizer.get('claims', {})
+        print(f"Claims: {claims}")
+
+        cognito_username = claims.get('sub')
+
+        if cognito_username:
+            print(f"✓ Found user ID (sub): {cognito_username}")
+            return cognito_username
+
+        # Fallback to email if sub not available
+        email = claims.get('email')
+        if email:
+            print(f"✓ Found user ID (email): {email}")
+            return email
+
+        print("⚠️ Warning: No user ID found in Cognito claims")
+        print(f"   Full authorizer object: {authorizer}")
+        return None
+
+    except Exception as e:
+        print(f"❌ Error extracting user ID: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def lambda_handler(event, context):
     """
     Main Lambda handler - routes requests based on source
-    
+
     Can be triggered by:
     1. S3 upload event (process image)
     2. API Gateway (get presigned URL, query results)
     """
     print(f"Event: {json.dumps(event)}")
-    
+
     # S3 trigger - process uploaded image
     if 'Records' in event and event['Records'][0]['eventSource'] == 'aws:s3':
         return process_s3_upload(event)
-    
+
     # API Gateway triggers
     http_method = event.get('httpMethod', '')
     path = event.get('path', '')
-    
+
     if http_method == 'POST' and '/upload-image' in path:
         return handle_upload_request(event)
-    
+
     elif http_method == 'GET' and '/analysis/' in path:
         return handle_get_analysis(event)
-    
+
     elif http_method == 'GET' and '/recommendations' in path:
         return handle_get_recommendations(event)
-    
+
     else:
         return {
             'statusCode': 404,
@@ -69,10 +112,16 @@ def handle_upload_request(event):
     try:
         # Generate analysis ID
         analysis_id = str(uuid.uuid4())
-        
-        # Get user ID from headers or generate
-        headers = event.get('headers', {})
-        user_id = headers.get('x-user-id', 'anonymous')
+
+        # Get authenticated user ID from Cognito
+        user_id = get_user_id_from_event(event)
+
+        if not user_id:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'Unauthorized - No valid user ID'})
+            }
         
         # S3 key for upload
         s3_key = f"uploads/{user_id}/{analysis_id}.jpg"
@@ -129,11 +178,19 @@ def process_s3_upload(event):
         s3_record = event['Records'][0]['s3']
         bucket = s3_record['bucket']['name']
         key = s3_record['object']['key']
-        
+
         print(f"Processing image: s3://{bucket}/{key}")
-        
-        # Extract analysis_id from key
-        analysis_id = key.split('/')[-1].replace('.jpg', '')
+
+        # Extract user_id and analysis_id from key (format: uploads/{user_id}/{analysis_id}.jpg)
+        path_parts = key.split('/')
+        if len(path_parts) >= 3:
+            user_id = path_parts[1]
+            analysis_id = path_parts[2].replace('.jpg', '')
+        else:
+            print(f"Error: Invalid S3 key format: {key}")
+            return {'statusCode': 400, 'body': 'Invalid S3 key format'}
+
+        print(f"User ID: {user_id}, Analysis ID: {analysis_id}")
         
         # Get image from S3
         image_obj = s3.get_object(Bucket=bucket, Key=key)
@@ -148,7 +205,7 @@ def process_s3_upload(event):
         if BEDROCK_AGENT_ID:
             print("Stage 2: Calling Bedrock Agent...")
             try:
-                enhanced = call_bedrock_agent(prediction)
+                enhanced = call_bedrock_agent(prediction, user_id)
             except Exception as e:
                 print(f"Bedrock agent failed: {str(e)}")
                 # Continue with just initial prediction
@@ -162,6 +219,7 @@ def process_s3_upload(event):
         # Update DynamoDB with results
         update_analysis_results(
             analysis_id=analysis_id,
+            user_id=user_id,
             prediction=prediction,
             enhanced=enhanced,
             products=products
@@ -220,59 +278,180 @@ def call_huggingface(image_bytes):
         raise
 
 
-def call_bedrock_agent(prediction):
-    """Call AWS Bedrock Agent for enhanced analysis - fallback to template-based summary"""
+def call_bedrock_agent(prediction, user_id, session_id=None):
+    """Call AWS Bedrock Agent with AgentCore for enhanced analysis using RAG"""
     condition = prediction['condition']
     confidence = float(prediction['confidence'])
     all_conditions = prediction.get('all_conditions', {})
 
-    # Generate summary based on condition (template-based fallback if Bedrock unavailable)
-    summary = generate_condition_summary(condition, confidence, all_conditions)
+    # Generate session ID if not provided (for memory)
+    if not session_id:
+        session_id = f"{user_id}_{condition}_{int(datetime.utcnow().timestamp())}"
 
-    # If Bedrock Agent is configured, try to use it
+    print(f"🧠 Calling Bedrock Agent with session: {session_id}")
+
+    # Get user's previous analyses for memory context
+    user_history = get_user_analysis_history(user_id, limit=5)
+
+    # Build comprehensive prompt with medical context
+    input_text = f"""
+SKIN ANALYSIS REQUEST
+
+Patient Profile:
+- User ID: {user_id}
+- Previous analyses: {len(user_history)} sessions
+
+Current Analysis:
+- Primary Condition: {condition}
+- Confidence: {confidence:.1%}
+- Secondary Conditions: {', '.join([f"{k} ({v:.1%})" for k, v in list(all_conditions.items())[:3]])}
+
+Analysis Context:
+{build_analysis_context(prediction, user_history)}
+
+Please provide a comprehensive analysis including:
+1. Medical explanation of the condition(s)
+2. Evidence-based treatment recommendations
+3. Product suggestions from our database
+4. When to consult a dermatologist
+5. Prevention strategies
+
+Cite your sources from medical literature and provide reasoning for each recommendation.
+"""
+
     if BEDROCK_AGENT_ID:
         try:
-            print("Attempting Bedrock Agent call...")
-            input_text = f"""
-            Analyze this skin condition for personalized recommendations:
-
-            Detected Condition: {condition}
-            Confidence: {confidence:.1%}
-            All Detections: {json.dumps(all_conditions)}
-
-            Provide a brief 1-2 sentence summary of this condition.
-            """
+            print("🤖 Invoking Bedrock Agent with RAG...")
 
             response = bedrock.invoke_agent(
                 agentId=BEDROCK_AGENT_ID,
                 agentAliasId='TSTALIASID',
-                sessionId=str(uuid.uuid4()),
-                inputText=input_text.strip()
+                sessionId=session_id,  # Enable memory across sessions
+                inputText=input_text.strip(),
+                enableTrace=True  # Enable tracing for debugging
             )
 
-            # Parse Bedrock response
+            # Parse AgentCore response
+            agent_response = response.get('completion', '')
+            citations = response.get('citations', [])
+
+            # Extract structured information from agent response
+            enhanced_analysis = parse_agent_response(agent_response)
+
             enhanced = {
-                'summary': summary,  # Use template summary as fallback
-                'recommendations': [],
-                'severity': 'moderate',
-                'care_instructions': [],
+                'summary': enhanced_analysis.get('summary', generate_condition_summary(condition, confidence, all_conditions)),
+                'recommendations': enhanced_analysis.get('recommendations', []),
+                'severity': enhanced_analysis.get('severity', determine_severity(confidence)),
+                'care_instructions': enhanced_analysis.get('care_instructions', []),
+                'citations': citations,
+                'session_id': session_id,
+                'used_memory': len(user_history) > 0,
                 'timestamp': datetime.utcnow().isoformat()
             }
 
-            print(f"Bedrock agent analysis complete")
+            print(f"✅ Bedrock Agent analysis complete (memory: {len(user_history)} sessions)")
             return enhanced
 
         except Exception as e:
-            print(f"Bedrock agent error: {str(e)}, using template summary")
+            print(f"❌ Bedrock agent error: {str(e)}, falling back to template")
+            # Fall through to template-based response
 
-    # Return template-based summary
+    # Fallback to template-based summary
     return {
-        'summary': summary,
+        'summary': generate_condition_summary(condition, confidence, all_conditions),
         'recommendations': [],
         'severity': determine_severity(confidence),
         'care_instructions': [],
+        'citations': [],
+        'session_id': session_id,
+        'used_memory': False,
         'timestamp': datetime.utcnow().isoformat()
     }
+
+
+def get_user_analysis_history(user_id, limit=5):
+    """Get user's previous analysis history for memory context"""
+    try:
+        # Scan analyses table for user's history
+        response = analyses_table.scan(
+            FilterExpression='user_id = :uid',
+            ExpressionAttributeValues={':uid': user_id},
+            Limit=limit,
+            ScanIndexForward=False  # Most recent first
+        )
+
+        analyses = response.get('Items', [])
+
+        # Convert Decimal types and format for context
+        history = []
+        for analysis in analyses:
+            if 'prediction' in analysis and 'enhanced_analysis' in analysis:
+                history.append({
+                    'condition': analysis['prediction'].get('condition', 'Unknown'),
+                    'confidence': float(analysis['prediction'].get('confidence', 0)),
+                    'date': analysis.get('timestamp', 'Unknown'),
+                    'severity': analysis.get('enhanced_analysis', {}).get('severity', 'Unknown')
+                })
+
+        return history
+
+    except Exception as e:
+        print(f"Error fetching user history: {e}")
+        return []
+
+
+def build_analysis_context(prediction, user_history):
+    """Build context string from prediction and user history"""
+    context = f"Current analysis shows {prediction['condition']} with {float(prediction['confidence']):.1%} confidence."
+
+    if user_history:
+        context += f"\n\nPatient History ({len(user_history)} previous analyses):"
+        for i, hist in enumerate(user_history[:3]):  # Show last 3
+            context += f"\n{i+1}. {hist['date']}: {hist['condition']} ({hist['severity']})"
+
+    return context
+
+
+def parse_agent_response(agent_response):
+    """Parse structured information from Bedrock Agent response"""
+    # This is a simplified parser - in production, use more sophisticated NLP
+    analysis = {
+        'summary': '',
+        'recommendations': [],
+        'severity': 'moderate',
+        'care_instructions': []
+    }
+
+    if not agent_response:
+        return analysis
+
+    # Split response into sections (basic parsing)
+    sections = agent_response.split('\n\n')
+
+    for section in sections:
+        section_lower = section.lower()
+
+        if 'summary' in section_lower or 'explanation' in section_lower:
+            analysis['summary'] = section.strip()
+        elif 'recommend' in section_lower or 'treat' in section_lower:
+            # Extract recommendations
+            lines = section.split('\n')
+            for line in lines:
+                if line.strip().startswith(('1.', '2.', '3.', '4.', '5.', '-', '•')):
+                    analysis['recommendations'].append(line.strip().lstrip('123456789.-• '))
+        elif 'care' in section_lower or 'instruction' in section_lower:
+            analysis['care_instructions'].append(section.strip())
+        elif 'severe' in section_lower:
+            if 'high' in section_lower or 'severe' in section_lower:
+                analysis['severity'] = 'high'
+            elif 'low' in section_lower or 'mild' in section_lower:
+                analysis['severity'] = 'low'
+
+    # Fallback if parsing failed
+    if not analysis['summary']:
+        analysis['summary'] = agent_response[:500] + "..." if len(agent_response) > 500 else agent_response
+
+    return analysis
 
 
 def generate_condition_summary(condition, confidence, all_conditions):
@@ -378,7 +557,7 @@ def get_product_recommendations(condition, limit=5):
         return []
 
 
-def update_analysis_results(analysis_id, prediction, enhanced, products):
+def update_analysis_results(analysis_id, user_id, prediction, enhanced, products):
     """Update DynamoDB with analysis results"""
     try:
         # Prepare update expression
@@ -397,7 +576,7 @@ def update_analysis_results(analysis_id, prediction, enhanced, products):
             update_expression += ", enhanced_analysis = :enhanced"
         
         analyses_table.update_item(
-            Key={'analysis_id': analysis_id, 'user_id': 'anonymous'},  # Need proper user_id
+            Key={'analysis_id': analysis_id, 'user_id': user_id},
             UpdateExpression=update_expression,
             ExpressionAttributeNames={'#status': 'status'},
             ExpressionAttributeValues=update_data
@@ -416,22 +595,34 @@ def handle_get_analysis(event):
         # Extract analysis_id from path
         path_params = event.get('pathParameters', {})
         analysis_id = path_params.get('id')
-        
+
         if not analysis_id:
             return {
                 'statusCode': 400,
+                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'error': 'Missing analysis_id'})
             }
-        
-        # Query DynamoDB
+
+        # Get authenticated user ID
+        user_id = get_user_id_from_event(event)
+
+        if not user_id:
+            return {
+                'statusCode': 401,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'Unauthorized - No valid user ID'})
+            }
+
+        # Query DynamoDB with user_id to ensure ownership
         response = analyses_table.get_item(
-            Key={'analysis_id': analysis_id, 'user_id': 'anonymous'}  # Need proper user_id
+            Key={'analysis_id': analysis_id, 'user_id': user_id}
         )
         
         if 'Item' not in response:
             return {
-                'statusCode': 404,
-                'body': json.dumps({'error': 'Analysis not found'})
+                'statusCode': 403,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'Forbidden - Analysis not found or access denied'})
             }
         
         item = response['Item']

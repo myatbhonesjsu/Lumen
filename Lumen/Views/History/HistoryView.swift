@@ -11,8 +11,39 @@ import SwiftData
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \SkinMetric.timestamp, order: .reverse) private var skinMetrics: [SkinMetric]
-    @State private var selectedMetric: SkinMetric?
+    @State private var selectedMetricID: UUID?
     @State private var showDetail = false
+    @State private var groupByFolder = true
+    @State private var refreshID = UUID()
+
+    private var selectedMetric: SkinMetric? {
+        guard let id = selectedMetricID else { return nil }
+        return skinMetrics.first(where: { $0.id == id })
+    }
+    
+    private var groupedMetrics: [String: [SkinMetric]] {
+        guard !skinMetrics.isEmpty else {
+            return [:]
+        }
+        return Dictionary(grouping: skinMetrics) { metric in
+            metric.folderName ?? "Unsorted"
+        }
+    }
+    
+    private var sortedFolders: [String] {
+        guard !groupedMetrics.isEmpty else {
+            return []
+        }
+        return groupedMetrics.keys.sorted { folder1, folder2 in
+            guard let metrics1 = groupedMetrics[folder1],
+                  let metrics2 = groupedMetrics[folder2],
+                  let date1 = metrics1.first?.timestamp,
+                  let date2 = metrics2.first?.timestamp else {
+                return false
+            }
+            return date1 > date2
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -29,24 +60,73 @@ struct HistoryView: View {
                             OverviewCard(metrics: skinMetrics)
                                 .padding(.horizontal, 20)
                                 .padding(.top, 20)
+                                .id(refreshID)
 
                             // Timeline
                             VStack(alignment: .leading, spacing: 16) {
-                                Text("History")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .padding(.horizontal, 20)
-
-                                LazyVStack(spacing: 16) {
-                                    ForEach(skinMetrics) { metric in
-                                        HistoryCard(metric: metric)
-                                            .onTapGesture {
-                                                selectedMetric = metric
-                                                showDetail = true
-                                            }
+                                HStack {
+                                    Text("History")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                    
+                                    Spacer()
+                                    
+                                    Button(action: { groupByFolder.toggle() }) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: groupByFolder ? "folder.fill" : "list.bullet")
+                                            Text(groupByFolder ? "Folders" : "List")
+                                        }
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.yellow.opacity(0.1))
+                                        .cornerRadius(8)
                                     }
                                 }
                                 .padding(.horizontal, 20)
+
+                                if groupByFolder {
+                                    // Folder-based view
+                                    LazyVStack(spacing: 16) {
+                                        ForEach(sortedFolders, id: \.self) { folderName in
+                                            FolderSection(
+                                                folderName: folderName,
+                                                metrics: groupedMetrics[folderName] ?? [],
+                                                onSelectMetric: { metric in
+                                                    selectedMetricID = metric.id
+                                                    showDetail = true
+                                                },
+                                                onDeleteMetric: { metric in
+                                                    deleteMetric(metric)
+                                                },
+                                                onDeleteFolder: {
+                                                    deleteFolder(folderName)
+                                                }
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                } else {
+                                    // List view with swipe to delete
+                                    LazyVStack(spacing: 16) {
+                                        ForEach(skinMetrics) { metric in
+                                            HistoryCard(metric: metric)
+                                                .onTapGesture {
+                                                    selectedMetricID = metric.id
+                                                    showDetail = true
+                                                }
+                                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                                    Button(role: .destructive) {
+                                                        deleteMetric(metric)
+                                                    } label: {
+                                                        Label("Delete", systemImage: "trash")
+                                                    }
+                                                }
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                }
                             }
 
                             Spacer(minLength: 100)
@@ -56,10 +136,159 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .sheet(isPresented: $showDetail) {
-                if let metric = selectedMetric {
-                    ImprovedAnalysisDetailView(metric: metric)
+                if let id = selectedMetricID,
+                   let metric = skinMetrics.first(where: { $0.id == id }) {
+                    ModernAnalysisDetailView(metric: metric)
+                } else {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 50))
+                            .foregroundColor(.orange)
+                        Text("Analysis not found")
+                            .font(.headline)
+                        Button("Close") {
+                            showDetail = false
+                        }
+                        .padding()
+                        .background(Color.yellow)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    .padding()
                 }
             }
+            .onAppear {
+                // Force refresh when view appears
+                refreshID = UUID()
+            }
+            .onChange(of: skinMetrics.count) { oldCount, newCount in
+                // Force refresh when count changes
+                if oldCount != newCount {
+                    refreshID = UUID()
+                }
+            }
+        }
+    }
+    
+    private func deleteMetric(_ metric: SkinMetric) {
+        modelContext.delete(metric)
+        do {
+            try modelContext.save()
+            // Force UI refresh after deletion
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                refreshID = UUID()
+            }
+        } catch {
+            print("Error deleting metric: \(error)")
+        }
+    }
+    
+    private func deleteFolder(_ folderName: String) {
+        // Handle "Unsorted" specially - these have nil folderName
+        let metricsToDelete: [SkinMetric]
+        if folderName == "Unsorted" {
+            metricsToDelete = skinMetrics.filter { $0.folderName == nil }
+        } else {
+            metricsToDelete = skinMetrics.filter { $0.folderName == folderName }
+        }
+
+        for metric in metricsToDelete {
+            modelContext.delete(metric)
+        }
+
+        do {
+            try modelContext.save()
+            // Force UI refresh after deletion
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                refreshID = UUID()
+            }
+        } catch {
+            print("Error deleting folder: \(error)")
+        }
+    }
+}
+
+// MARK: - Folder Section
+
+struct FolderSection: View {
+    let folderName: String
+    let metrics: [SkinMetric]
+    let onSelectMetric: (SkinMetric) -> Void
+    let onDeleteMetric: (SkinMetric) -> Void
+    let onDeleteFolder: () -> Void
+    
+    @State private var isExpanded = true
+    @State private var showDeleteAlert = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Folder Header
+            Button(action: { withAnimation { isExpanded.toggle() } }) {
+                HStack {
+                    Image(systemName: isExpanded ? "folder.fill" : "folder")
+                        .foregroundColor(.yellow)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(folderName)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+
+                        Text("\(metrics.count) analyses")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: { showDeleteAlert = true }) {
+                        Image(systemName: "trash")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(8)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(16)
+                .background(Color.cardBackground)
+                .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+            
+            // Folder Contents
+            if isExpanded {
+                VStack(spacing: 12) {
+                    ForEach(metrics) { metric in
+                        HistoryCard(metric: metric)
+                            .onTapGesture {
+                                onSelectMetric(metric)
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    onDeleteMetric(metric)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                    }
+                }
+                .padding(.leading, 20)
+            }
+        }
+        .alert("Delete Folder", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete All", role: .destructive) {
+                onDeleteFolder()
+            }
+        } message: {
+            Text("Delete all \(metrics.count) analyses in \"\(folderName)\"? This cannot be undone.")
         }
     }
 }
@@ -212,6 +441,7 @@ struct HistoryCard: View {
                 HStack {
                     Text(formatDate(metric.timestamp))
                         .font(.headline)
+                        .lineLimit(1)
                     Spacer()
                     Text("\(Int(metric.overallHealth))%")
                         .font(.headline)
@@ -222,10 +452,12 @@ struct HistoryCard: View {
                     Label("\(metric.skinAge)", systemImage: "calendar")
                         .font(.caption)
                         .foregroundColor(.gray)
+                        .lineLimit(1)
 
                     Label("Skin Age", systemImage: "face.smiling")
                         .font(.caption)
                         .foregroundColor(.gray)
+                        .lineLimit(1)
                 }
 
                 // Mini metrics
