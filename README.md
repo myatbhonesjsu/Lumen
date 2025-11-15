@@ -378,6 +378,14 @@ For questions or issues:
 - Mock AI analysis with realistic data
 - Build status:  **BUILD SUCCEEDED**
 
+## Model_AI_Skin_Agent
+- Classifies 10 common skin conditions: acne, blackheads, whiteheads, dark spots, pores, wrinkles, dry skin, oily skin, eyebags, redness.
+- Uses images from Kaggle and Roboflow.
+- Preprocesses data to unify labels.
+- Fine-tunes EfficientNet-B0 with PyTorch.
+- Can resume training from checkpoints.
+- Evaluates with classification report and confusion matrix.
+- Gives predicted condition and cosmetic care tips.
 ---
 
 ##  Technical Highlights
