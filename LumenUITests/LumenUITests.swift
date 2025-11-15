@@ -74,6 +74,10 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(homeScreen.waitForExistence(timeout: 5), "Should navigate to Home after completing onboarding")
 
     }
+    
+    // Continue here
+    
+    //
 
     @MainActor
     func testLaunchPerformance() throws {
