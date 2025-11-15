@@ -99,6 +99,7 @@ struct ImprovedHomeView: View {
 
                     Spacer(minLength: 100)
                 }
+                .accessibilityIdentifier("home.screen")
                 .padding(.top, 16)
             }
             .background(Color(.systemGroupedBackground))
