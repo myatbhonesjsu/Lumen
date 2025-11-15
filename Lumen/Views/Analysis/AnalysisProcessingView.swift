@@ -21,6 +21,21 @@ struct AnalysisProcessingView: View {
 
     @State private var savedMetric: SkinMetric?
 
+    // Handle dismiss: close any sheets first, then dismiss the view
+    private func handleDismiss() {
+        // If folder prompt sheet is showing, dismiss it first
+        if savedMetric != nil {
+            savedMetric = nil
+            // Give the sheet time to dismiss before closing the view
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                onDismiss()
+            }
+        } else {
+            // No sheet showing, dismiss immediately
+            onDismiss()
+        }
+    }
+
     var topConditions: [(String, Double)] {
         guard let result = analysisResult else { return [] }
 
@@ -54,7 +69,7 @@ struct AnalysisProcessingView: View {
 
                     Spacer()
 
-                    Button(action: onDismiss) {
+                    Button(action: handleDismiss) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title2)
                             .foregroundColor(.secondary)
@@ -431,7 +446,17 @@ struct AnalysisProcessingView: View {
         )
 
         modelContext.insert(metric)
-        try? modelContext.save()
+
+        // Ensure the save completes successfully
+        do {
+            try modelContext.save()
+            print("✓ Analysis saved successfully to SwiftData")
+
+            // Notify other views to refresh
+            NotificationCenter.default.post(name: NSNotification.Name("AnalysisSaved"), object: nil)
+        } catch {
+            print("✗ Error saving analysis: \(error)")
+        }
 
         // Using sheet(item:) ensures the metric is available when sheet renders
         savedMetric = metric

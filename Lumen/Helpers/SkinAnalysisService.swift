@@ -18,6 +18,14 @@ struct AnalysisResult: Equatable {
     let timestamp: Date
     let summary: String?
 
+    // Dual Independent Analysis (HuggingFace + Claude)
+    let isClaudeValidated: Bool      // True if dual analysis was performed
+    let claudeConfidence: Double?    // Claude's independent confidence
+    let agreesWithPrimary: Bool?     // True if both models agree
+    let validationSeverity: String?  // Severity from Claude analysis
+    let validationInsights: String?  // Claude's clinical insights
+    let confidenceBoost: Double?     // Confidence boost from consensus
+
     struct Product: Equatable {
         let name: String
         let brand: String
@@ -168,13 +176,28 @@ class SkinAnalysisService {
                     // Get summary from enhanced analysis if available
                     let summary = awsResponse.enhanced_analysis?.summary
 
+                    // Extract Claude validation data
+                    let validation = awsResponse.claude_validation
+                    let isValidated = predData.claude_validated ?? false
+                    let claudeConf = validation?.claude_confidence
+                    let agrees = validation?.agrees_with_primary
+                    let severity = validation?.severity
+                    let insights = validation?.full_analysis
+                    let boost = validation?.confidence_boost
+
                     let result = AnalysisResult(
                         condition: predData.condition,
                         confidence: predData.confidence,
                         allConditions: predData.all_conditions ?? [:],
                         products: products,
                         timestamp: Date(),
-                        summary: summary
+                        summary: summary,
+                        isClaudeValidated: isValidated,
+                        claudeConfidence: claudeConf,
+                        agreesWithPrimary: agrees,
+                        validationSeverity: severity,
+                        validationInsights: insights,
+                        confidenceBoost: boost
                     )
 
                     completion(.success(result))

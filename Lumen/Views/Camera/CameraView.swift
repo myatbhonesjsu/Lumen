@@ -10,6 +10,18 @@ import AVFoundation
 import PhotosUI
 import Combine
 
+// Face detection error
+enum FaceDetectionError: LocalizedError {
+    case noFaceDetected(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .noFaceDetected(let message):
+            return message
+        }
+    }
+}
+
 // Wrapper to make UIImage identifiable for sheet presentation
 struct AnalysisImageItem: Identifiable {
     let id = UUID()
@@ -98,35 +110,27 @@ struct CameraView: View {
 
                     Spacer()
 
-                    // Camera Preview with face guide overlay
-                    ZStack {
-                        CameraPreviewView(session: cameraManager.session)
-                            .frame(maxWidth: .infinity)
-                            .aspectRatio(3/4, contentMode: .fit)
-                            .clipShape(RoundedRectangle(cornerRadius: 24))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24)
-                                    .stroke(Color.yellow.opacity(0.6), lineWidth: 3)
-                            )
-
-                        // Face guide overlay
-                        Ellipse()
-                            .stroke(style: StrokeStyle(lineWidth: 2, dash: [10, 5]))
-                            .foregroundColor(.white.opacity(0.5))
-                            .frame(width: 200, height: 260)
-                    }
-                    .padding(.horizontal, 24)
+                    // Camera Preview
+                    CameraPreviewView(session: cameraManager.session)
+                        .frame(maxWidth: .infinity)
+                        .aspectRatio(3/4, contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(Color.yellow.opacity(0.6), lineWidth: 3)
+                        )
+                        .padding(.horizontal, 24)
 
                     Spacer()
 
                     // Instructions
                     VStack(spacing: 8) {
-                        Text("Position your face in the oval")
+                        Text("Center your face in the frame")
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(.white.opacity(0.95))
 
-                        Text("Good lighting improves accuracy")
+                        Text("Good lighting and clear view improve accuracy")
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.7))
                     }
@@ -256,6 +260,17 @@ struct CameraView: View {
             return
         }
 
+        // Validate that image contains a face
+        let validation = FaceDetectionService.shared.validateImage(image)
+
+        if !validation.isValid {
+            // Show error alert for invalid image
+            self.analysisError = FaceDetectionError.noFaceDetected(validation.message)
+            self.showValidationError(message: validation.message)
+            HapticManager.shared.error()
+            return
+        }
+
         // Reset state
         self.analysisResult = nil
         self.analysisError = nil
@@ -287,6 +302,21 @@ struct CameraView: View {
                 }
             }
         )
+    }
+
+    private func showValidationError(message: String) {
+        // Create and show alert
+        let alert = UIAlertController(
+            title: "Face Not Detected",
+            message: message,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootViewController = windowScene.windows.first?.rootViewController {
+            rootViewController.present(alert, animated: true)
+        }
     }
 }
 
@@ -457,10 +487,8 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     deinit {
-        // Stop session synchronously during deallocation to avoid weak reference issues
-        if session.isRunning {
-            session.stopRunning()
-        }
+        // Session is stopped asynchronously in stopSession() called from onDisappear
+        // Do not call stopRunning() synchronously here as it can cause crashes
     }
 }
 

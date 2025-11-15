@@ -112,6 +112,14 @@ struct FolderNamePromptSheet: View {
             }
             .background(Color(.systemBackground))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.secondary)
+                }
+            }
             .onAppear {
                 isFocused = true
             }

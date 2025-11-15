@@ -68,11 +68,13 @@ struct AnalysisResponse: Codable, @unchecked Sendable {
     let prediction: PredictionData?
     let enhanced_analysis: EnhancedAnalysisData?
     let products: [ProductData]?
+    let claude_validation: ClaudeValidationData?  // Hybrid dual-analysis result
 
     struct PredictionData: Codable, @unchecked Sendable {
         let condition: String
         let confidence: Double
         let all_conditions: [String: Double]?
+        let claude_validated: Bool?  // True if dual analysis was performed
     }
 
     struct EnhancedAnalysisData: Codable, @unchecked Sendable {
@@ -80,6 +82,19 @@ struct AnalysisResponse: Codable, @unchecked Sendable {
         let recommendations: [String]
         let severity: String
         let care_instructions: [String]
+    }
+
+    struct ClaudeValidationData: Codable, @unchecked Sendable {
+        // Hybrid Dual Analysis Result (HuggingFace + Claude)
+        let status: String                    // "success" or "error"
+        let agrees_with_primary: Bool?        // True if both models agree
+        let claude_confidence: Double?        // Claude's independent confidence
+        let overall_confidence: Double?       // Final hybrid confidence
+        let confidence_boost: Double?         // Boost from consensus
+        let severity: String?                 // Severity from Claude
+        let full_analysis: String?            // Clinical insights
+        let discrepancies: [String]?          // If models disagree
+        let validation_mode: String?          // "consensus", "hybrid", or "single"
     }
 
     struct ProductData: Codable, @unchecked Sendable {
