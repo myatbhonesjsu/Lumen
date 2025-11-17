@@ -69,6 +69,15 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "bedrock-runtime:InvokeModel"  # For Claude 3.5 Sonnet
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = [
+          "arn:aws:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:${local.prefix}-personalized-insights-generator"
+        ]
       }
     ]
   })

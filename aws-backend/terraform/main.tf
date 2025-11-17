@@ -35,6 +35,19 @@ variable "huggingface_api_url" {
   default     = "https://Musubi23-skin-analyzer.hf.space/predict"
 }
 
+variable "openweather_api_key" {
+  description = "OpenWeatherMap API key for MCP weather server"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "pinecone_index_name" {
+  description = "Pinecone vector database index name"
+  type        = string
+  default     = "lumen-skincare-knowledge"
+}
+
 # Data sources
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}

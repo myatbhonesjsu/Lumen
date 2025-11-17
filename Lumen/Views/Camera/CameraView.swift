@@ -37,6 +37,8 @@ struct CameraView: View {
     @State private var analysisResult: AnalysisResult?
     @State private var analysisError: Error?
     @State private var progressMessage: String = ""
+    @State private var showFaceDetectionError = false
+    @State private var faceDetectionErrorMessage = ""
 
     var body: some View {
         ZStack {
@@ -214,13 +216,24 @@ struct CameraView: View {
         .onChange(of: selectedItem) { _, newValue in
             Task {
                 if let data = try? await newValue?.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
+                   let loadedImage = UIImage(data: data) {
+                    // Fix orientation for images from photo library
+                    let image = loadedImage.fixedOrientation() ?? loadedImage
+
                     // IMPORTANT: Ensure we're on main thread before calling processImage
                     await MainActor.run {
-                        self.processImage(image)
+                        // Skip face detection for gallery images - user has already selected them
+                        self.processImage(image, skipFaceDetection: true)
                     }
                 }
             }
+        }
+        .alert("Face Not Detected", isPresented: $showFaceDetectionError) {
+            Button("OK", role: .cancel) {
+                showFaceDetectionError = false
+            }
+        } message: {
+            Text(faceDetectionErrorMessage)
         }
         .sheet(item: $analysisImageItem) { imageItem in
             NavigationStack {
@@ -246,29 +259,33 @@ struct CameraView: View {
             if let image = image {
                 // IMPORTANT: Ensure we're on main thread before calling processImage
                 DispatchQueue.main.async {
-                    self.processImage(image)
+                    // Perform face detection for camera captures
+                    self.processImage(image, skipFaceDetection: false)
                 }
             }
         }
     }
 
-    private func processImage(_ image: UIImage) {
+    private func processImage(_ image: UIImage, skipFaceDetection: Bool = false) {
         guard Thread.isMainThread else {
             DispatchQueue.main.async {
-                self.processImage(image)
+                self.processImage(image, skipFaceDetection: skipFaceDetection)
             }
             return
         }
 
-        // Validate that image contains a face
-        let validation = FaceDetectionService.shared.validateImage(image)
+        // Validate that image contains a face (only for camera captures)
+        if !skipFaceDetection {
+            let validation = FaceDetectionService.shared.validateImage(image)
 
-        if !validation.isValid {
-            // Show error alert for invalid image
-            self.analysisError = FaceDetectionError.noFaceDetected(validation.message)
-            self.showValidationError(message: validation.message)
-            HapticManager.shared.error()
-            return
+            if !validation.isValid {
+                // Show error alert for invalid image
+                self.analysisError = FaceDetectionError.noFaceDetected(validation.message)
+                self.faceDetectionErrorMessage = validation.message
+                self.showFaceDetectionError = true
+                HapticManager.shared.error()
+                return
+            }
         }
 
         // Reset state
@@ -304,20 +321,6 @@ struct CameraView: View {
         )
     }
 
-    private func showValidationError(message: String) {
-        // Create and show alert
-        let alert = UIAlertController(
-            title: "Face Not Detected",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootViewController = windowScene.windows.first?.rootViewController {
-            rootViewController.present(alert, animated: true)
-        }
-    }
 }
 
 // Camera Manager
@@ -362,6 +365,7 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     private func setupCamera() {
+        // This function must be called on sessionQueue
         session.beginConfiguration()
 
         // Remove existing inputs/outputs
@@ -384,6 +388,7 @@ class CameraManager: NSObject, ObservableObject {
         let newOutput = AVCapturePhotoOutput()
         if session.canAddOutput(newOutput) {
             session.addOutput(newOutput)
+            // Update published property on main thread
             DispatchQueue.main.async { [weak self] in
                 self?.output = newOutput
             }
@@ -393,9 +398,12 @@ class CameraManager: NSObject, ObservableObject {
 
         // Start session on background queue
         sessionQueue.async { [weak self] in
-            self?.session.startRunning()
-            DispatchQueue.main.async {
-                self?.isSessionRunning = true
+            guard let self = self else { return }
+            if !self.session.isRunning {
+                self.session.startRunning()
+                DispatchQueue.main.async {
+                    self.isSessionRunning = true
+                }
             }
         }
     }
@@ -404,6 +412,7 @@ class CameraManager: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
 
+            // Ensure session is configured on session queue
             self.session.beginConfiguration()
 
             // Remove existing inputs
@@ -426,24 +435,35 @@ class CameraManager: NSObject, ObservableObject {
             }
 
             self.session.commitConfiguration()
+            
+            // Ensure session continues running after switch
+            if !self.session.isRunning {
+                self.session.startRunning()
+            }
         }
     }
 
     func capturePhoto(completion: @escaping (UIImage?) -> Void) {
+        // Get output reference on main thread first
+        let currentOutput = output
+        
         sessionQueue.async { [weak self] in
             guard let self = self else {
-                completion(nil)
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
                 return
             }
 
             self.photoCompletion = completion
 
             // Create photo settings with best available codec
+            // Use the output reference captured on main thread
             let settings: AVCapturePhotoSettings
 
-            if self.output.availablePhotoCodecTypes.contains(.hevc) {
+            if currentOutput.availablePhotoCodecTypes.contains(.hevc) {
                 settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc])
-            } else if self.output.availablePhotoCodecTypes.contains(.jpeg) {
+            } else if currentOutput.availablePhotoCodecTypes.contains(.jpeg) {
                 settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
             } else {
                 settings = AVCapturePhotoSettings()
@@ -452,13 +472,14 @@ class CameraManager: NSObject, ObservableObject {
             // Enable high resolution capture
             if #available(iOS 16.0, *) {
                 // Use maxPhotoDimensions for iOS 16+
-                settings.maxPhotoDimensions = self.output.maxPhotoDimensions
+                settings.maxPhotoDimensions = currentOutput.maxPhotoDimensions
             } else {
                 // Fallback for earlier versions
                 settings.isHighResolutionPhotoEnabled = true
             }
 
-            self.output.capturePhoto(with: settings, delegate: self)
+            // Capture photo on session queue (output operations are thread-safe)
+            currentOutput.capturePhoto(with: settings, delegate: self)
         }
     }
 
@@ -475,20 +496,32 @@ class CameraManager: NSObject, ObservableObject {
     }
 
     func stopSession() {
+        // Capture session reference before async dispatch
+        let currentSession = self.session
+        let wasRunning = currentSession.isRunning
+
         sessionQueue.async { [weak self] in
-            guard let self = self else { return }
-            if self.session.isRunning {
-                self.session.stopRunning()
+            // Only stop if session was running and hasn't been stopped already
+            if wasRunning && currentSession.isRunning {
+                currentSession.stopRunning()
                 DispatchQueue.main.async {
-                    self.isSessionRunning = false
+                    self?.isSessionRunning = false
                 }
             }
         }
     }
 
     deinit {
-        // Session is stopped asynchronously in stopSession() called from onDisappear
-        // Do not call stopRunning() synchronously here as it can cause crashes
+        // Clean up camera session
+        // Use autoreleasepool to ensure proper cleanup
+        autoreleasepool {
+            if session.isRunning {
+                session.stopRunning()
+            }
+            // Remove all inputs and outputs to break retain cycles
+            session.inputs.forEach { session.removeInput($0) }
+            session.outputs.forEach { session.removeOutput($0) }
+        }
     }
 }
 

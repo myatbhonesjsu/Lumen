@@ -53,19 +53,21 @@ struct ImprovedHomeView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
 
-                    // Today's Focus Card
-                    TodaysFocusCard(
-                        latestMetric: latestMetric,
-                        todayRoutine: todayRoutine,
-                        onTap: { showRoutine = true }
-                    )
-                    .padding(.horizontal, 20)
+                    // Start Your First Scan - Show when no analyses exist
+                    if latestMetric == nil {
+                        StartYourFirstScanCard(showCamera: $showCamera)
+                            .padding(.horizontal, 20)
+                    }
 
                     // Quick Stats
                     if let metric = latestMetric {
                         QuickStatsCard(metric: metric)
                             .padding(.horizontal, 20)
                     }
+
+                    // AI-Powered Personalized Insights (Multi-Agent System)
+                    AgenticInsightsCard(selectedTab: $selectedTab)
+                    .padding(.horizontal, 20)
 
                     // AI Learning Hub Shortcut
                     AILearningShortcutCard(
@@ -659,6 +661,79 @@ struct MiniMetricBadge: View {
         .padding(.vertical, 4)
         .background(Color(.tertiarySystemGroupedBackground))
         .cornerRadius(8)
+    }
+}
+
+// MARK: - Start Your First Scan Card
+
+struct StartYourFirstScanCard: View {
+    @Binding var showCamera: Bool
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(
+                            colors: [Color.yellow.opacity(0.3), Color.yellow.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 70, height: 70)
+
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.yellow)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Start Your First Scan")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+
+                    Text("Take your first skin analysis to unlock personalized AI insights, progress tracking, and daily recommendations")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(3)
+                }
+
+                Spacer()
+            }
+
+            Button(action: {
+                HapticManager.shared.light()
+                showCamera = true
+            }) {
+                HStack {
+                    Image(systemName: "camera.fill")
+                        .font(.subheadline)
+                    Text("Take Your First Scan")
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    LinearGradient(
+                        colors: [Color.yellow, Color.yellow.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(12)
+            }
+        }
+        .padding(20)
+        .background(
+            LinearGradient(
+                colors: [Color.yellow.opacity(0.15), Color.yellow.opacity(0.05)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(16)
+        .shadow(color: .yellow.opacity(0.2), radius: 15, y: 5)
     }
 }
 

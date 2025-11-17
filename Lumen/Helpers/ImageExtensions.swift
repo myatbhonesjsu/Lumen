@@ -186,6 +186,31 @@ extension UIImage {
         let targetSize = CGSize(width: maxDimension, height: maxDimension)
         return resized(to: targetSize)
     }
+
+    /// Fix image orientation by redrawing it
+    /// This is critical for images from photo library which may have EXIF orientation
+    func fixedOrientation() -> UIImage? {
+        // If image orientation is already .up, return self
+        if imageOrientation == .up {
+            return self
+        }
+
+        // Calculate the appropriate transformations based on orientation
+        guard cgImage != nil else { return nil }
+
+        // Create a bitmap context with the correct size
+        let width = size.width
+        let height = size.height
+
+        UIGraphicsBeginImageContextWithOptions(size, false, scale)
+        defer { UIGraphicsEndImageContext() }
+
+        // Draw the image with its orientation applied
+        draw(in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        // Get the newly rendered image
+        return UIGraphicsGetImageFromCurrentImageContext()
+    }
 }
 
 // MARK: - CIImage Extensions

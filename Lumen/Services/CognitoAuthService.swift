@@ -55,8 +55,8 @@ enum CognitoAuthError: Error, LocalizedError {
 }
 
 // MARK: - Authentication Response Models
-private struct CognitoAuthResponse: Codable, @unchecked Sendable {
-    struct AuthenticationResult: Codable, @unchecked Sendable {
+private struct CognitoAuthResponse: Codable, Sendable {
+    struct AuthenticationResult: Codable, Sendable {
         let AccessToken: String
         let ExpiresIn: Int
         let IdToken: String

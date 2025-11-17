@@ -55,13 +55,13 @@ enum AWSBackendError: Error, LocalizedError {
 }
 
 // MARK: - Response Models
-struct UploadResponse: Codable, @unchecked Sendable {
+struct UploadResponse: Codable, Sendable {
     let analysis_id: String
     let upload_url: String
     let message: String
 }
 
-struct AnalysisResponse: Codable, @unchecked Sendable {
+struct AnalysisResponse: Codable, Sendable {
     let analysis_id: String
     let status: String
     let timestamp: Int?
@@ -70,21 +70,21 @@ struct AnalysisResponse: Codable, @unchecked Sendable {
     let products: [ProductData]?
     let claude_validation: ClaudeValidationData?  // Hybrid dual-analysis result
 
-    struct PredictionData: Codable, @unchecked Sendable {
+    struct PredictionData: Codable, Sendable {
         let condition: String
         let confidence: Double
         let all_conditions: [String: Double]?
         let claude_validated: Bool?  // True if dual analysis was performed
     }
 
-    struct EnhancedAnalysisData: Codable, @unchecked Sendable {
+    struct EnhancedAnalysisData: Codable, Sendable {
         let summary: String
         let recommendations: [String]
         let severity: String
         let care_instructions: [String]
     }
 
-    struct ClaudeValidationData: Codable, @unchecked Sendable {
+    struct ClaudeValidationData: Codable, Sendable {
         // Hybrid Dual Analysis Result (HuggingFace + Claude)
         let status: String                    // "success" or "error"
         let agrees_with_primary: Bool?        // True if both models agree
@@ -97,7 +97,7 @@ struct AnalysisResponse: Codable, @unchecked Sendable {
         let validation_mode: String?          // "consensus", "hybrid", or "single"
     }
 
-    struct ProductData: Codable, @unchecked Sendable {
+    struct ProductData: Codable, Sendable {
         let product_id: String
         let name: String
         let brand: String
