@@ -94,6 +94,7 @@ struct CameraView: View {
                                 .background(Color.black.opacity(0.3))
                                 .clipShape(Circle())
                         }
+                        .accessibilityIdentifier("scan.close")
 
                         Spacer()
 
@@ -168,6 +169,7 @@ struct CameraView: View {
                                     .frame(width: 64, height: 64)
                             }
                         }
+                        .accessibilityIdentifier("scan.shutter")
                         .disabled(!cameraManager.isSessionRunning)
                         .opacity(cameraManager.isSessionRunning ? 1.0 : 0.5)
 

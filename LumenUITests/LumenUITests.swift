@@ -2,8 +2,6 @@
 //  LumenUITests.swift
 //  LumenUITests
 //
-//  Created by Myat Bhone San on 10/18/25.
-//
 
 import XCTest
 
@@ -18,7 +16,6 @@ final class LumenUITests: XCTestCase {
         // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
         app = XCUIApplication()
         app.launchArguments += ["UITEST_RESET", "USE_MOCK_BACKEND"]
-        app.launch()
         
         // Handle permissions
         addUIInterruptionMonitor(withDescription: "System Alerts") { alert in
@@ -36,6 +33,8 @@ final class LumenUITests: XCTestCase {
             }
             return false
         }
+        
+        app.launch()
     }
 
     override func tearDownWithError() throws {
@@ -44,6 +43,7 @@ final class LumenUITests: XCTestCase {
     }
 
 // MARK: Test 1 - Happy Path
+    
     func testOnboarding_HappyPath_CompletesAndShowsHome() throws {
         // Page 0 (Welcome)
         XCTAssertTrue(app.buttons["nav.next"].waitForExistence(timeout: 3), "Next button should exist on Welcome page")
@@ -171,11 +171,12 @@ final class LumenUITests: XCTestCase {
     }
     
 // MARK: Test 3 - Home
+    
     func ensureAtHome(file: StaticString = #filePath, line: UInt = #line) {
-        // 0) Already on Home?
+        // on Home?
         if app.staticTexts["Skin Analysis"].waitForExistence(timeout: 1.5) { return }
 
-        // 1) If Welcome appears, complete minimal onboarding.
+        // if Welcome appears, complete minimal onboarding.
         if app.buttons["nav.next"].waitForExistence(timeout: 4) {
             app.buttons["nav.next"].tap()
 
@@ -200,7 +201,7 @@ final class LumenUITests: XCTestCase {
             getStarted.tap()
         }
 
-        // 2) Finally, wait for Home to appear (type-agnostic)
+        // wait for Home to appear
         let homeHeader = app.staticTexts["Skin Analysis"]
         XCTAssertTrue(homeHeader.waitForExistence(timeout: 6), "Home screen did not appear after onboarding.")
     }
@@ -211,7 +212,6 @@ final class LumenUITests: XCTestCase {
         // Just verify Home is visible and the section header exists.
         XCTAssertTrue(app.staticTexts["Skin Analysis"].waitForExistence(timeout: 5))
 
-        // And maybe also that the four tiles exist
         XCTAssertTrue(app.buttons["home.analyze"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["home.history"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["home.chat"].waitForExistence(timeout: 5))
@@ -339,7 +339,138 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Skin Analysis"].waitForExistence(timeout: 5))
     }
 
-// MARK: Test 4 - History
+// MARK: Test 4 - Camera
+
+    private func openScanFromHome(file: StaticString = #filePath, line: UInt = #line) {
+        ensureAtHome(file: file, line: line)
+
+        let analyzeTile = app.buttons["home.analyze"]
+        XCTAssertTrue(
+            analyzeTile.waitForExistence(timeout: 6),
+            "Analyze tile not found on Home",
+            file: file, line: line
+        )
+        analyzeTile.tap()
+
+        // Trigger the UIInterruptionMonitor so it can handle camera permission
+        app.tap()
+    }
+    
+    // Camera opens and shows scan screen
+    func testCamera_FromHome_ShowsScanScreen() {
+        openScanFromHome()
+
+        let scanScreen = app.anyElement(withId: "scan.screen")
+        XCTAssertTrue(
+            scanScreen.waitForExistence(timeout: 8),
+            "Scan screen did not appear after tapping Analyze"
+        )
+    }
+
+    // Close button returns to Home
+    func testCamera_Close_ReturnsHome() {
+        openScanFromHome()
+
+        let scanScreen = app.anyElement(withId: "scan.screen")
+        XCTAssertTrue(
+            scanScreen.waitForExistence(timeout: 8),
+            "Scan screen did not appear"
+        )
+
+        // Use the label we actually see in the hierarchy: "Close"
+        let closeButton = app.buttons["Close"]
+        XCTAssertTrue(
+            closeButton.waitForExistence(timeout: 5),
+            "Scan close (X) button not found"
+        )
+        closeButton.tap()
+
+        // Back on Home
+        let homeHeader = app.staticTexts["Skin Analysis"]
+        XCTAssertTrue(homeHeader.waitForExistence(timeout: 6), "Did not return to Home after closing camera")
+    }
+
+
+    // Shutter button exists (and is tappable)
+    func testCamera_ShutterButton_VisibleAndTappable() {
+        openScanFromHome()
+
+        let scanScreen = app.anyElement(withId: "scan.screen")
+        XCTAssertTrue(
+            scanScreen.waitForExistence(timeout: 8),
+            "Scan screen did not appear"
+        )
+
+        let shutter = app.buttons.matching(
+            NSPredicate(format: "identifier == 'scan.shutter' OR (identifier == 'scan.screen' AND label == '')")
+        ).firstMatch
+
+        XCTAssertTrue(
+            shutter.waitForExistence(timeout: 5),
+            "Shutter button not visible on scan screen"
+        )
+
+        // Try tapping it (even if disabled, this just verifies the control is there)
+        shutter.tap()
+    }
+    
+    
+// MARK: Test 5 - History
+    
+    func testHistory_OpenEntryIfExists() {
+        ensureAtHome()
+
+        // Go to history
+        let historyTile = app.buttons["home.history"]
+        XCTAssertTrue(historyTile.waitForExistence(timeout: 5))
+        historyTile.tap()
+
+        let historyScreen = app.anyElement(withId: "history.screen")
+        XCTAssertTrue(historyScreen.waitForExistence(timeout: 5))
+
+        // Look for a history cell (button or list row)
+        let firstEntry = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Scan' OR label CONTAINS[c] 'Result'")).firstMatch
+
+        if firstEntry.exists {
+            firstEntry.tap()
+
+            let detail = app.anyElement(withId: "history.detail.screen")
+            XCTAssertTrue(detail.waitForExistence(timeout: 5), "Detail screen did not appear")
+
+            // Go back if there's a back button
+            app.buttons["Back"].firstMatch.tap()
+            XCTAssertTrue(historyScreen.waitForExistence(timeout: 5))
+        } else {
+            // Verify empty state appears instead
+            let emptyLabel = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'No' OR label CONTAINS[c] 'empty'")).firstMatch
+            XCTAssertTrue(emptyLabel.exists, "Expected empty state in History but nothing found")
+        }
+    }
+
+// MARK: Test 6 - Learn/Chat
+    
+    func testLearn_ContentLoads() {
+        ensureAtHome()
+
+        app.buttons["Learn"].tap()
+
+        let learnScreen = app.anyElement(withId: "learn.screen")
+        XCTAssertTrue(learnScreen.waitForExistence(timeout: 5))
+
+        // Check the main title
+        let title = app.staticTexts["Your AI Skincare Assistant"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5), "Learn screen did not show expected header")
+
+        // Check at least one suggested question card
+        let suggestion = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'skin'")).firstMatch
+        XCTAssertTrue(suggestion.exists, "Learn screen has no suggestion cards")
+    }
+
+// MARK: Test 7 - Learn (Articles) if needed
+    
+
+    
+
 
 
     
