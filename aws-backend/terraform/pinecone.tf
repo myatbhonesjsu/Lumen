@@ -24,27 +24,6 @@ resource "aws_secretsmanager_secret" "pinecone_api_key" {
 #   - products: Product descriptions & reviews
 #   - recommendations: Successful routine patterns
 
-# DynamoDB table for caching MCP server responses
-resource "aws_dynamodb_table" "mcp_cache" {
-  name         = "${local.prefix}-mcp-cache"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "cache_key"
-
-  attribute {
-    name = "cache_key"
-    type = "S"
-  }
-
-  ttl {
-    attribute_name = "ttl"
-    enabled        = true
-  }
-
-  tags = merge(local.common_tags, {
-    Purpose = "MCP server response caching"
-  })
-}
-
 # DynamoDB table for daily insights
 resource "aws_dynamodb_table" "daily_insights" {
   name         = "${local.prefix}-daily-insights"
@@ -98,11 +77,6 @@ resource "aws_dynamodb_table" "checkin_responses" {
 output "pinecone_secret_arn" {
   description = "ARN of Pinecone API key secret"
   value       = aws_secretsmanager_secret.pinecone_api_key.arn
-}
-
-output "mcp_cache_table" {
-  description = "MCP cache DynamoDB table name"
-  value       = aws_dynamodb_table.mcp_cache.name
 }
 
 output "daily_insights_table" {

@@ -1,5 +1,5 @@
 # Additional Lambda Functions for Multi-Agent System
-# Daily Insights Orchestrator, RAG Query Handler, Vector Embedding Processor, MCP Servers
+# Daily Insights Orchestrator, RAG Query Handler, Vector Embedding Processor
 
 # IAM Role for additional Lambda functions
 resource "aws_iam_role" "additional_lambda_role" {
@@ -51,8 +51,7 @@ resource "aws_iam_role_policy" "additional_lambda_policy" {
           aws_dynamodb_table.analyses.arn,
           "${aws_dynamodb_table.analyses.arn}/index/*",
           aws_dynamodb_table.daily_insights.arn,
-          aws_dynamodb_table.checkin_responses.arn,
-          aws_dynamodb_table.mcp_cache.arn
+          aws_dynamodb_table.checkin_responses.arn
         ]
       },
       {
@@ -113,7 +112,6 @@ resource "aws_lambda_function" "daily_insights_orchestrator" {
       DAILY_INSIGHTS_TABLE  = aws_dynamodb_table.daily_insights.name
       CHECKIN_RESPONSES_TABLE = aws_dynamodb_table.checkin_responses.name
       LAMBDA_PREFIX         = local.prefix
-      MCP_CACHE_TABLE       = aws_dynamodb_table.mcp_cache.name
     }
   }
 
@@ -162,27 +160,6 @@ resource "aws_lambda_function" "vector_embedding_processor" {
   tags = local.common_tags
 }
 
-# MCP Weather Server Lambda
-resource "aws_lambda_function" "mcp_weather_server" {
-  filename         = "${path.module}/../lambda/lambda_deployment.zip"
-  function_name    = "${local.prefix}-mcp-weather-server"
-  role             = aws_iam_role.additional_lambda_role.arn
-  handler          = "mcp_weather_server.lambda_handler"
-  source_code_hash = filebase64sha256("${path.module}/../lambda/lambda_deployment.zip")
-  runtime          = "python3.11"
-  timeout          = 30
-  memory_size      = 256
-
-  environment {
-    variables = {
-      MCP_CACHE_TABLE       = aws_dynamodb_table.mcp_cache.name
-      OPENWEATHER_API_KEY   = var.openweather_api_key
-    }
-  }
-
-  tags = local.common_tags
-}
-
 # CloudWatch Log Groups
 resource "aws_cloudwatch_log_group" "daily_insights_orchestrator_logs" {
   name              = "/aws/lambda/${aws_lambda_function.daily_insights_orchestrator.function_name}"
@@ -198,12 +175,6 @@ resource "aws_cloudwatch_log_group" "rag_query_handler_logs" {
 
 resource "aws_cloudwatch_log_group" "vector_embedding_processor_logs" {
   name              = "/aws/lambda/${aws_lambda_function.vector_embedding_processor.function_name}"
-  retention_in_days = 14
-  tags              = local.common_tags
-}
-
-resource "aws_cloudwatch_log_group" "mcp_weather_server_logs" {
-  name              = "/aws/lambda/${aws_lambda_function.mcp_weather_server.function_name}"
   retention_in_days = 14
   tags              = local.common_tags
 }
@@ -269,14 +240,6 @@ resource "aws_lambda_permission" "allow_bedrock_rag_query_handler" {
   statement_id  = "AllowBedrockInvokeRAGQuery"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.rag_query_handler.function_name
-  principal     = "bedrock.amazonaws.com"
-  source_arn    = "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:agent/*"
-}
-
-resource "aws_lambda_permission" "allow_bedrock_mcp_weather_server" {
-  statement_id  = "AllowBedrockInvokeMCPWeather"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.mcp_weather_server.function_name
   principal     = "bedrock.amazonaws.com"
   source_arn    = "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:agent/*"
 }
