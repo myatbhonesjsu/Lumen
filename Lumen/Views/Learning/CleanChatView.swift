@@ -226,6 +226,8 @@ struct CleanChatView: View {
                 ArticleWebView(article: article)
             }
         }
+        .accessibilityIdentifier("chat.screen")
+
     }
     
     private var canSend: Bool {

@@ -152,6 +152,7 @@ struct HistoryView: View {
                 }
             }
         }
+        .accessibilityIdentifier("history.screen")
     }
     
     private func deleteMetric(_ metric: SkinMetric) {

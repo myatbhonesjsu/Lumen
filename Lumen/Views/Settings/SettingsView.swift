@@ -189,6 +189,7 @@ struct SettingsView: View {
                 Text("Are you sure you want to delete all your data? This action cannot be undone.")
             }
         }
+        .accessibilityIdentifier("settings.screen")
     }
 
     private func deleteAllData() {

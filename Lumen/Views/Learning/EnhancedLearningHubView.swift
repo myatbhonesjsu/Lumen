@@ -92,6 +92,7 @@ struct EnhancedLearningHubView: View {
                 }
             }
         }
+        .accessibilityIdentifier("learn.screen")
     }
 }
 

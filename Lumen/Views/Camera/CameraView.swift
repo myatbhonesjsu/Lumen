@@ -194,6 +194,7 @@ struct CameraView: View {
                 }
             }
         }
+        .accessibilityIdentifier("scan.screen")
         .onAppear {
             // Reset analysis state for new session
             analysisResult = nil

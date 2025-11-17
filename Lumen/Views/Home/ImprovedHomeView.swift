@@ -99,7 +99,6 @@ struct ImprovedHomeView: View {
 
                     Spacer(minLength: 100)
                 }
-                .accessibilityIdentifier("home.screen")
                 .padding(.top, 16)
             }
             .background(Color(.systemGroupedBackground))
@@ -148,6 +147,7 @@ struct GreetingHeader: View {
                             .foregroundColor(.gray)
                     )
             }
+            .accessibilityIdentifier("home.settings")
         }
     }
 }
@@ -244,6 +244,7 @@ struct TodaysFocusCard: View {
             .shadow(color: .yellow.opacity(0.1), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("home.routine")
     }
 }
 
@@ -289,6 +290,7 @@ struct QuickStatsCard: View {
         .background(Color.cardBackground)
         .cornerRadius(16)
         .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
+        .accessibilityIdentifier("home.stats")
     }
 }
 
@@ -341,6 +343,7 @@ struct AILearningShortcutCard: View {
             .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("home.aiAssistant")
     }
 }
 
@@ -456,6 +459,7 @@ struct ProgressTrackingCard: View {
         .background(Color.cardBackground)
         .cornerRadius(16)
         .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
+        .accessibilityIdentifier("home.progress")
     }
 }
 
@@ -474,6 +478,7 @@ struct SkinAnalysisActionsCard: View {
 
             HStack(spacing: 12) {
                 AnalysisActionButton(
+                    id: "home.analyze",
                     icon: "camera.fill",
                     title: "New Scan",
                     subtitle: "Analyze skin",
@@ -484,6 +489,7 @@ struct SkinAnalysisActionsCard: View {
                 }
 
                 AnalysisActionButton(
+                    id: "home.history",
                     icon: "clock.arrow.circlepath",
                     title: "History",
                     subtitle: "Past results",
@@ -496,6 +502,7 @@ struct SkinAnalysisActionsCard: View {
 
             HStack(spacing: 12) {
                 AnalysisActionButton(
+                    id: "home.chat",
                     icon: "sparkles",
                     title: "AI Chat",
                     subtitle: "Ask questions",
@@ -507,6 +514,7 @@ struct SkinAnalysisActionsCard: View {
                 }
 
                 AnalysisActionButton(
+                    id: "home.learn",
                     icon: "book.fill",
                     title: "Learn",
                     subtitle: "Read articles",
@@ -526,6 +534,7 @@ struct SkinAnalysisActionsCard: View {
 }
 
 struct AnalysisActionButton: View {
+    let id: String?
     let icon: String
     let title: String
     let subtitle: String
@@ -559,6 +568,8 @@ struct AnalysisActionButton: View {
                     .stroke(color.opacity(0.2), lineWidth: 1)
             )
         }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(id ?? "")
     }
 }
 
@@ -632,7 +643,8 @@ struct RecentAnalysisCard: View {
             .cornerRadius(16)
             .shadow(color: Color.adaptiveShadow, radius: 10, y: 4)
         }
-        .buttonStyle(.plain)
+        // .buttonStyle(.plain)
+        .accessibilityIdentifier("home.recent")
     }
 
     private func formatDate(_ date: Date) -> String {
@@ -702,6 +714,7 @@ struct EmptyStateCardImproved: View {
                     .cornerRadius(12)
             }
             .padding(.horizontal, 32)
+            .accessibilityIdentifier("home.takePhoto")
         }
         .padding(.vertical, 40)
         .padding(.horizontal, 20)
