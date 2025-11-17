@@ -357,7 +357,6 @@ San Jose State University, Fall 2025
 
 ## Support
 
-- Review documentation in `/docs/CLAUDE.md`
 - Check AWS CloudWatch logs for backend debugging
 - Monitor OpenAI usage at https://platform.openai.com/usage
 - Create an issue in the repository for technical questions
