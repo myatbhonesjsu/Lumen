@@ -416,30 +416,106 @@ final class LumenUITests: XCTestCase {
 
 // MARK: Test 5 - Learn/Chat
     
-    func test_05_Learn_01_ContentLoads() {
-        ensureAtHome()
+    private func openLearnFromTabBar(
+        file: StaticString = #filePath,
+        line: UInt = #line) {
 
+        ensureAtHome(file: file, line: line)
         app.buttons["Learn"].tap()
 
         let learnScreen = app.anyElement(withId: "learn.screen")
-        XCTAssertTrue(learnScreen.waitForExistence(timeout: 5))
-
-        // Check the main title
-        let title = app.staticTexts["Your AI Skincare Assistant"]
-        XCTAssertTrue(title.waitForExistence(timeout: 5), "Learn screen did not show expected header")
-
-        // Check at least one suggested question card
-        let suggestion = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'skin'")).firstMatch
-        XCTAssertTrue(suggestion.exists, "Learn screen has no suggestion cards")
+        XCTAssertTrue(
+            learnScreen.waitForExistence(timeout: 5),
+            "Learn screen did not appear after tapping Learn tab",
+            file: file,
+            line: line
+        )
     }
 
-// MARK: Test 6 - Learn (Articles) if needed
-    
+    func test_05_Learn_01_TabBar_OpensChatHero() {
+        openLearnFromTabBar()
 
-    
+        let header = app.staticTexts["Your AI Skincare Assistant"]
+        XCTAssertTrue(
+            header.waitForExistence(timeout: 5),
+            "Chat hero header did not appear on Learn screen"
+        )
 
+        // At least one sample question card
+        let sampleQuestion = app.staticTexts
+            .containing(NSPredicate(format: "label CONTAINS[c] '?'"))
+            .firstMatch
+        XCTAssertTrue(
+            sampleQuestion.waitForExistence(timeout: 5),
+            "No sample question card appeared on Chat tab"
+        )
+    }
 
+    func test_05_Learn_02_TabBar_SwitchesToArticles() {
+        openLearnFromTabBar()
 
+        let articlesTab = app.buttons["Articles"]
+        XCTAssertTrue(
+            articlesTab.waitForExistence(timeout: 3),
+            "Articles tab not visible in Learn segmented control"
+        )
+        articlesTab.tap()
+
+        // Articles search field
+        let searchField = app.textFields["Search articles..."]
+        XCTAssertTrue(
+            searchField.waitForExistence(timeout: 5),
+            "Articles search field did not appear"
+        )
+
+        let allCategory = app.buttons["All"]
+        XCTAssertTrue(
+            allCategory.waitForExistence(timeout: 5),
+            "Articles category filter chips not visible"
+        )
+    }
+
+    func test_05_Learn_03_TabBar_SwitchesToForYou() {
+        openLearnFromTabBar()
+
+        let forYouTab = app.buttons["For You"]
+        XCTAssertTrue(
+            forYouTab.waitForExistence(timeout: 3),
+            "'For You' tab not visible in Learn segmented control"
+        )
+        forYouTab.tap()
+
+        let header = app.staticTexts["Personalized For You"]
+        XCTAssertTrue(
+            header.waitForExistence(timeout: 6),
+            "'Personalized For You' header did not appear on recommendations tab"
+        )
+    }
+
+    func test_05_Learn_04_HomeChatTile_OpensChatOnLearn() {
+        ensureAtHome()
+
+        let chatTile = app.buttons["home.chat"]
+        XCTAssertTrue(
+            chatTile.waitForExistence(timeout: 5),
+            "Home AI Chat tile not found"
+        )
+        chatTile.tap()
+
+        let learnScreen = app.anyElement(withId: "learn.screen")
+        XCTAssertTrue(
+            learnScreen.waitForExistence(timeout: 5),
+            "Learn screen did not appear after tapping AI Chat tile"
+        )
+
+        let header = app.staticTexts["Your AI Skincare Assistant"]
+        XCTAssertTrue(
+            header.waitForExistence(timeout: 5),
+            "Chat hero header not visible after opening from AI Chat tile"
+        )
+    }
+
+    // More tests if needed
     
     
     
