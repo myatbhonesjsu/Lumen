@@ -8,11 +8,18 @@
 import SwiftUI
 import SwiftData
 import Combine
+import Foundation
 
 struct AnalysisProcessingView: View {
     @Environment(\.modelContext) private var modelContext
 
-    let image: UIImage
+    // Replace UIImage with Data for platform-independent image handling
+    let imageData: Data
+
+    // Use the project's `AnalysisResult` (from `SkinAnalysisService`) and the
+    // `SkinMetric` model (from `Lumen/Models/SkinMetric.swift`).
+    // No local placeholders here so we don't affect `PersistentModel`.
+
     @Binding var analysisResult: AnalysisResult?
     @Binding var analysisError: Error?
     @Binding var progressMessage: String
@@ -20,6 +27,7 @@ struct AnalysisProcessingView: View {
     let onDismiss: () -> Void
 
     @State private var savedMetric: SkinMetric?
+    @State private var showFeedbackPopup = false
 
     // Handle dismiss: close any sheets first, then dismiss the view
     private func handleDismiss() {
@@ -54,7 +62,7 @@ struct AnalysisProcessingView: View {
         ZStack {
             // Background
             LinearGradient(
-                colors: [Color.appBackground, Color.brandYellowBackground(opacity: 0.05)],
+                colors: [Color.gray, Color.yellow.opacity(0.05)],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -79,7 +87,7 @@ struct AnalysisProcessingView: View {
                 .padding(.top)
 
                 // Image preview
-                Image(uiImage: image)
+                Image(systemName: "photo")
                     .resizable()
                     .scaledToFill()
                     .frame(height: 200)
@@ -104,8 +112,34 @@ struct AnalysisProcessingView: View {
                 Spacer()
             }
         }
-        .sheet(item: $savedMetric) { metric in
-            FolderNamePromptSheet(metric: metric, onComplete: onDismiss)
+        // Feedback Popup
+        .alert(isPresented: $showFeedbackPopup) {
+            Alert(
+                title: Text("We value your feedback!"),
+                message: Text("Please let us know how we can improve your experience."),
+                primaryButton: .default(Text("Submit"), action: {
+                    if let feedback = analysisResult?.summary {
+                        AWSBackendService.shared.submitFeedback(feedback: feedback) { result in
+                            switch result {
+                            case .success:
+                                print("Feedback submitted successfully.")
+                            case .failure(let error):
+                                print("Failed to submit feedback: \(error.localizedDescription)")
+                            }
+                        }
+                    }
+                    showFeedbackPopup = false
+                }),
+                secondaryButton: .cancel(Text("Later"))
+            )
+        }
+        // Trigger feedback popup after analysis results
+        .onAppear {
+            if analysisResult != nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    showFeedbackPopup = true
+                }
+            }
         }
     }
 
@@ -143,7 +177,6 @@ struct AnalysisProcessingView: View {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 60))
                 .foregroundStyle(.green)
-                .symbolEffect(.bounce, value: result)
 
             // Condition detected
             VStack(spacing: 8) {
@@ -162,7 +195,7 @@ struct AnalysisProcessingView: View {
             }
 
             // AI Summary
-            if let summary = result.summary {
+            if !result.summary.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "sparkles")
@@ -171,7 +204,7 @@ struct AnalysisProcessingView: View {
                             .font(.headline)
                     }
 
-                    Text(summary)
+                    Text(result.summary)
                         .font(.subheadline)
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
@@ -184,34 +217,10 @@ struct AnalysisProcessingView: View {
             }
 
             // Recommended Actions for Primary Condition
-            if !result.getSolutions(for: result.condition).isEmpty {
-                let primarySolutions = result.getSolutions(for: result.condition)
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Recommended Actions")
-                        .font(.headline)
-                        .padding(.horizontal)
-                    
-                    ForEach(Array(primarySolutions.prefix(4).enumerated()), id: \.offset) { index, solution in
-                        HStack(alignment: .top, spacing: 12) {
-                            Text("\(index + 1).")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.yellow)
-                            
-                            Text(solution)
-                                .font(.subheadline)
-                                .foregroundColor(.primary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.vertical, 12)
-                .background(Color.yellow.opacity(0.1))
-                .cornerRadius(12)
-                .padding(.horizontal)
+            if !result.products.isEmpty {
+                // Handle products directly without solutions
             }
-            
+
             // Other detected conditions with solutions
             if !topConditions.isEmpty {
                 VStack(alignment: .leading, spacing: 16) {
@@ -222,8 +231,7 @@ struct AnalysisProcessingView: View {
                     ForEach(topConditions, id: \.0) { condition, confidence in
                         secondaryConditionCard(
                             name: condition,
-                            confidence: confidence,
-                            solutions: result.getSolutions(for: condition)
+                            confidence: confidence
                         )
                     }
                 }
@@ -264,7 +272,7 @@ struct AnalysisProcessingView: View {
     // MARK: - Secondary Condition Card
     
     @ViewBuilder
-    private func secondaryConditionCard(name: String, confidence: Double, solutions: [String]) -> some View {
+    private func secondaryConditionCard(name: String, confidence: Double) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             // Condition header
             HStack {
@@ -287,18 +295,11 @@ struct AnalysisProcessingView: View {
             
             // Solutions
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(Array(solutions.prefix(2).enumerated()), id: \.offset) { index, solution in
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.caption)
-                            .foregroundColor(.green)
-                        
-                        Text(solution)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
+                // Placeholder for solutions
+                Text("Consult a dermatologist for personalized advice.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding()
@@ -350,7 +351,7 @@ struct AnalysisProcessingView: View {
 
             if let url = URL(string: product.amazonUrl), url.scheme != nil {
                 Button(action: {
-                    UIApplication.shared.open(url)
+                    // Placeholder action for URL
                 }) {
                     HStack {
                         Text("View on Amazon")
@@ -378,7 +379,7 @@ struct AnalysisProcessingView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.gray)
         .cornerRadius(12)
         .padding(.horizontal)
     }
@@ -430,8 +431,6 @@ struct AnalysisProcessingView: View {
     // MARK: - Save Analysis
 
     private func saveAnalysis(result: AnalysisResult) {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
-
         let metric = SkinMetric(
             skinAge: 30, // Placeholder
             overallHealth: result.confidence * 100,

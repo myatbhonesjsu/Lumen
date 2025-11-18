@@ -6,7 +6,6 @@
  */
 
 @preconcurrency import Foundation
-import UIKit
 
 // MARK: - Configuration
 enum AWSConfig {
@@ -115,27 +114,6 @@ class AWSBackendService {
 
     private init() {}
 
-    // MARK: - Authentication Helper
-
-    /**
-     * Add Cognito authentication header to a request
-     */
-    private func addAuthHeader(to request: inout URLRequest) {
-        if let idToken = CognitoAuthService.shared.getIdToken() {
-            request.setValue(idToken, forHTTPHeaderField: "Authorization")
-            log("🔐 Added authentication token to request")
-            #if DEBUG
-            // Log first/last few characters of token for debugging
-            let tokenPreview = String(idToken.prefix(20)) + "..." + String(idToken.suffix(20))
-            log("   Token preview: \(tokenPreview)")
-            log("   Auth Status: \(CognitoAuthService.shared.statusDescription)")
-            #endif
-        } else {
-            log("⚠️ No authentication token available - request may fail")
-            log("   Auth Status: \(CognitoAuthService.shared.statusDescription)")
-        }
-    }
-
     // MARK: - Nonisolated Decoding Helpers
 
     nonisolated private func decodeUploadResponse(from data: Data) throws -> UploadResponse {
@@ -155,7 +133,7 @@ class AWSBackendService {
      * with a single AWS backend call.
      */
     func analyzeSkin(
-        image: UIImage,
+        imageData: Data,
         onProgress: @escaping (String) -> Void,
         completion: @escaping (Result<AnalysisResponse, Error>) -> Void
     ) {
@@ -170,7 +148,7 @@ class AWSBackendService {
                 // Step 2: Upload image to S3
                 onProgress("Uploading image...")
                 
-                self.uploadImage(image, to: uploadResponse.upload_url) { uploadResult in
+                self.uploadImage(imageData, to: uploadResponse.upload_url) { uploadResult in
                     switch uploadResult {
                     case .success:
                         // Step 3: Poll for results
@@ -209,9 +187,6 @@ class AWSBackendService {
         var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
         request.httpMethod = "GET"
 
-        // Add Cognito authentication
-        addAuthHeader(to: &request)
-
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(AWSBackendError.networkError(error)))
@@ -238,6 +213,47 @@ class AWSBackendService {
         }.resume()
     }
     
+    /**
+     * Submit user feedback to AWS backend without CognitoAuthService
+     */
+    func submitFeedback(
+        feedback: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        guard let url = URL(string: "\(AWSConfig.apiEndpoint)/feedback") else {
+            completion(.failure(AWSBackendError.invalidURL))
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let feedbackData = ["feedback": feedback]
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: feedbackData, options: [])
+        } catch {
+            completion(.failure(error))
+            return
+        }
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                completion(.failure(AWSBackendError.uploadFailed("Failed to submit feedback")))
+                return
+            }
+
+            completion(.success(()))
+        }
+
+        task.resume()
+    }
+    
     // MARK: - Private Methods
     
     private func requestUploadURL(completion: @escaping (Result<UploadResponse, Error>) -> Void) {
@@ -250,9 +266,6 @@ class AWSBackendService {
         var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Add Cognito authentication
-        addAuthHeader(to: &request)
 
         log(" Requesting upload URL from: \(url.absoluteString)")
 
@@ -294,10 +307,9 @@ class AWSBackendService {
         }.resume()
     }
     
-    private func uploadImage(_ image: UIImage, to presignedURL: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        guard let url = URL(string: presignedURL),
-              let imageData = image.jpegData(compressionQuality: 0.8) else {
-            completion(.failure(AWSBackendError.uploadFailed("Failed to prepare image")))
+    private func uploadImage(_ imageData: Data, to presignedURL: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let url = URL(string: presignedURL) else {
+            completion(.failure(AWSBackendError.uploadFailed("Invalid presigned URL")))
             return
         }
         
@@ -404,9 +416,6 @@ class AWSBackendService {
 
         var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
         request.httpMethod = "GET"
-
-        // Add Cognito authentication
-        addAuthHeader(to: &request)
 
         log("GET request: \(url.absoluteString)")
 

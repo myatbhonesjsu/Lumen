@@ -84,7 +84,7 @@ resource "aws_lb" "alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = data.aws_subnet_ids.default.ids
+  subnets            = data.aws_subnets.default.ids
 }
 
 resource "aws_lb_target_group" "tg" {
@@ -93,6 +93,8 @@ resource "aws_lb_target_group" "tg" {
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
 
+  target_type = "ip"
+
   health_check {
     path                = "/health"
     healthy_threshold   = 2
@@ -100,6 +102,10 @@ resource "aws_lb_target_group" "tg" {
     timeout             = 5
     interval            = 10
   }
+
+    lifecycle {
+      create_before_destroy = true
+    }
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -111,6 +117,10 @@ resource "aws_lb_listener" "front_end" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.tg.arn
   }
+
+    lifecycle {
+      create_before_destroy = true
+    }
 }
 
 resource "aws_ecs_task_definition" "model_task" {
@@ -147,7 +157,7 @@ resource "aws_ecs_service" "model_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = data.aws_subnet_ids.default.ids
+  subnets         = data.aws_subnets.default.ids
     security_groups = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
@@ -165,8 +175,11 @@ data "aws_vpc" "default" {
   default = true
 }
 
-data "aws_subnet_ids" "default" {
-  vpc_id = data.aws_vpc.default.id
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
 }
 
 data "aws_region" "current" {}
