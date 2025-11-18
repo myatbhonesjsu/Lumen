@@ -1,0 +1,48 @@
+{
+  "source": "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Camera/CameraView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Take Photo",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "Position your face within the frame",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Good lighting helps with better analysis",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Gallery",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 83
+        }
+      },
+      {
+        "comment": "",
+        "key": "Flip",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 105
+        }
+      }
+    ]
+  },
+  "version": 1
+}

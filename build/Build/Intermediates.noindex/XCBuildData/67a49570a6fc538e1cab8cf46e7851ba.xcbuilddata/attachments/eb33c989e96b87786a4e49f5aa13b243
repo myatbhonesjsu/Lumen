@@ -1,0 +1,249 @@
+{
+  "" : {
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Lumen-primary.dia",
+    "emit-module-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Lumen-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Lumen-primary-emit-module.dia",
+    "pch" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Lumen-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Lumen-primary.swiftdeps"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/ContentView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Helpers/AIAnalysisEngine.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AIAnalysisEngine~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Helpers/ImageExtensions.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImageExtensions~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Item.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Item~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/LumenApp.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LumenApp~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Models/EducationalContent.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/EducationalContent~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Models/Recommendation.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/Recommendation~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Models/SkinConcern.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinConcern~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Models/SkinMetric.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SkinMetric~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Models/UserProfile.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/UserProfile~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Analysis/AnalysisDetailView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisDetailView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Analysis/AnalysisProcessingView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/AnalysisProcessingView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Analysis/ImprovedAnalysisDetailView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Camera/CameraView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/History/HistoryView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Home/HomeView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HomeView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Home/ImprovedHomeView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedHomeView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Learning/LearningHubView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/LearningHubView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/MainTabView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/MainTabView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Onboarding/ImprovedOnboardingView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Onboarding/OnboardingView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Recommendations/RecommendationsView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Settings/SettingsView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/SettingsView~partial.swiftmodule"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

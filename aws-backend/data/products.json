@@ -1,0 +1,255 @@
+[
+  {
+    "product_id": "1",
+    "name": "CeraVe Acne Foaming Cream Cleanser",
+    "brand": "CeraVe",
+    "description": "4% Benzoyl Peroxide acne treatment cleanser with hyaluronic acid and niacinamide",
+    "price_range": "$8-12",
+    "amazon_url": "https://www.amazon.com/CeraVe-Treatment-Hyaluronic-Niacinamide-Sensitive/dp/B07YLJPMC3",
+    "rating": 4.5,
+    "review_count": 12453,
+    "category": "Cleanser",
+    "target_conditions": [
+      "Acne",
+      "Oily Skin"
+    ],
+    "ingredients": [
+      "Benzoyl Peroxide",
+      "Hyaluronic Acid",
+      "Niacinamide",
+      "Ceramides"
+    ]
+  },
+  {
+    "product_id": "2",
+    "name": "The Ordinary Niacinamide 10% + Zinc 1%",
+    "brand": "The Ordinary",
+    "description": "High-strength vitamin and mineral blemish formula for acne-prone skin",
+    "price_range": "$5-8",
+    "amazon_url": "https://www.amazon.com/Ordinary-Niacinamide-10-Zinc-30ml/dp/B01MDTVZTZ",
+    "rating": 4.3,
+    "review_count": 45678,
+    "category": "Serum",
+    "target_conditions": [
+      "Acne",
+      "Large Pores",
+      "Oily Skin"
+    ],
+    "ingredients": [
+      "Niacinamide",
+      "Zinc PCA"
+    ]
+  },
+  {
+    "product_id": "3",
+    "name": "La Roche-Posay Effaclar Medicated Gel Cleanser",
+    "brand": "La Roche-Posay",
+    "description": "Acne treatment face wash with 2% salicylic acid for oily and acne-prone skin",
+    "price_range": "$15-18",
+    "amazon_url": "https://www.amazon.com/Roche-Posay-Effaclar-Medicated-Acne-Cleanser/dp/B00LO1DNXU",
+    "rating": 4.4,
+    "review_count": 8934,
+    "category": "Cleanser",
+    "target_conditions": [
+      "Acne",
+      "Oily Skin",
+      "Blackheads"
+    ],
+    "ingredients": [
+      "Salicylic Acid",
+      "Lipo-Hydroxy Acid",
+      "Glycerin"
+    ]
+  },
+  {
+    "product_id": "4",
+    "name": "RoC Retinol Correxion Eye Cream",
+    "brand": "RoC",
+    "description": "Anti-aging eye cream with retinol to reduce eye bags, dark circles, and crow's feet",
+    "price_range": "$15-20",
+    "amazon_url": "https://www.amazon.com/RoC-Correxion-Anti-Aging-Treatment-Puffiness/dp/B0009RFB76",
+    "rating": 4.4,
+    "review_count": 23456,
+    "category": "Eye Cream",
+    "target_conditions": [
+      "Eye Bags",
+      "Dark Circles",
+      "Wrinkles"
+    ],
+    "ingredients": [
+      "Retinol",
+      "Hyaluronic Acid",
+      "Glycerin"
+    ]
+  },
+  {
+    "product_id": "5",
+    "name": "The Ordinary Caffeine Solution 5% + EGCG",
+    "brand": "The Ordinary",
+    "description": "Reduces puffiness and dark circles with caffeine and green tea extract",
+    "price_range": "$6-8",
+    "amazon_url": "https://www.amazon.com/Ordinary-Caffeine-Solution-EGCG-30ml/dp/B01MUZVE1C",
+    "rating": 4.2,
+    "review_count": 18234,
+    "category": "Eye Serum",
+    "target_conditions": [
+      "Eye Bags",
+      "Dark Circles",
+      "Puffiness"
+    ],
+    "ingredients": [
+      "Caffeine",
+      "EGCG",
+      "Hyaluronic Acid"
+    ]
+  },
+  {
+    "product_id": "6",
+    "name": "Murad Rapid Dark Spot Correcting Serum",
+    "brand": "Murad",
+    "description": "Fast-acting treatment that reduces dark spots and evens skin tone",
+    "price_range": "$68-75",
+    "amazon_url": "https://www.amazon.com/Murad-Environmental-Shield-Rapid-Correcting/dp/B08KR79NBR",
+    "rating": 4.3,
+    "review_count": 5678,
+    "category": "Serum",
+    "target_conditions": [
+      "Dark Spots",
+      "Hyperpigmentation",
+      "Uneven Skin Tone"
+    ],
+    "ingredients": [
+      "Resorcinol",
+      "Tranexamic Acid",
+      "Glycolic Acid"
+    ]
+  },
+  {
+    "product_id": "7",
+    "name": "Garnier Skin Naturals Glow Serum",
+    "brand": "Garnier",
+    "description": "Vitamin C dark spot treatment serum for brighter, more even skin",
+    "price_range": "$12-16",
+    "amazon_url": "https://www.amazon.com/Garnier-Naturals-Anti-dark-spots-Brightening/dp/B09Y22SBPX",
+    "rating": 4.5,
+    "review_count": 12345,
+    "category": "Serum",
+    "target_conditions": [
+      "Dark Spots",
+      "Dull Skin",
+      "Uneven Skin Tone"
+    ],
+    "ingredients": [
+      "Vitamin C",
+      "Niacinamide",
+      "Salicylic Acid"
+    ]
+  },
+  {
+    "product_id": "8",
+    "name": "Neutrogena Rapid Wrinkle Repair Serum",
+    "brand": "Neutrogena",
+    "description": "Retinol SA formula accelerates visible wrinkle reduction",
+    "price_range": "$20-25",
+    "amazon_url": "https://www.amazon.com/Neutrogena-Wrinkle-Hyaluronic-Retinol-Glycerin/dp/B0067H6KW2",
+    "rating": 4.6,
+    "review_count": 34567,
+    "category": "Serum",
+    "target_conditions": [
+      "Wrinkles",
+      "Fine Lines",
+      "Aging Skin"
+    ],
+    "ingredients": [
+      "Retinol SA",
+      "Hyaluronic Acid",
+      "Glucose Complex"
+    ]
+  },
+  {
+    "product_id": "9",
+    "name": "Olay Regenerist Micro-Sculpting Cream",
+    "brand": "Olay",
+    "description": "Advanced anti-aging moisturizer with hyaluronic acid and peptides",
+    "price_range": "$28-35",
+    "amazon_url": "https://www.amazon.com/Olay-Regenerist-Micro-Sculpting-Cream-Moisturizer/dp/B0011DNXC2",
+    "rating": 4.7,
+    "review_count": 45678,
+    "category": "Moisturizer",
+    "target_conditions": [
+      "Wrinkles",
+      "Fine Lines",
+      "Loss of Firmness"
+    ],
+    "ingredients": [
+      "Hyaluronic Acid",
+      "Niacinamide",
+      "Peptides"
+    ]
+  },
+  {
+    "product_id": "10",
+    "name": "CeraVe Moisturizing Cream",
+    "brand": "CeraVe",
+    "description": "Daily face and body moisturizer with hyaluronic acid and ceramides",
+    "price_range": "$16-20",
+    "amazon_url": "https://www.amazon.com/CeraVe-Moisturizing-Cream-Daily-Moisturizer/dp/B00TTD9BRC",
+    "rating": 4.7,
+    "review_count": 78901,
+    "category": "Moisturizer",
+    "target_conditions": [
+      "Dry Skin",
+      "Healthy Skin",
+      "Sensitive Skin"
+    ],
+    "ingredients": [
+      "Hyaluronic Acid",
+      "Ceramides",
+      "Glycerin"
+    ]
+  },
+  {
+    "product_id": "11",
+    "name": "EltaMD UV Clear Broad-Spectrum SPF 46",
+    "brand": "EltaMD",
+    "description": "Oil-free sunscreen for acne-prone and sensitive skin with niacinamide",
+    "price_range": "$36-42",
+    "amazon_url": "https://www.amazon.com/EltaMD-Acne-Prone-Mineral-Based-Dermatologist-Recommended/dp/B002MSN3QQ",
+    "rating": 4.8,
+    "review_count": 23456,
+    "category": "Sunscreen",
+    "target_conditions": [
+      "Acne",
+      "Sensitive Skin",
+      "Rosacea",
+      "Healthy Skin"
+    ],
+    "ingredients": [
+      "Zinc Oxide",
+      "Niacinamide",
+      "Hyaluronic Acid",
+      "Lactic Acid"
+    ]
+  },
+  {
+    "product_id": "12",
+    "name": "Paula's Choice 2% BHA Liquid Exfoliant",
+    "brand": "Paula's Choice",
+    "description": "Gentle salicylic acid exfoliant for unclogging pores and smoothing skin",
+    "price_range": "$32-35",
+    "amazon_url": "https://www.amazon.com/Paulas-Choice-SKIN-PERFECTING-Exfoliant-Facial-Blackheads/dp/B00949CTQQ",
+    "rating": 4.6,
+    "review_count": 56789,
+    "category": "Exfoliant",
+    "target_conditions": [
+      "Large Pores",
+      "Blackheads",
+      "Uneven Texture",
+      "Acne"
+    ],
+    "ingredients": [
+      "Salicylic Acid",
+      "Green Tea Extract"
+    ]
+  }
+]

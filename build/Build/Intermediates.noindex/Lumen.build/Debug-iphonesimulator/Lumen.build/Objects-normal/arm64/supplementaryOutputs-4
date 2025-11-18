@@ -1,0 +1,23 @@
+{
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Analysis/ImprovedAnalysisDetailView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.dia",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedAnalysisDetailView.swiftdeps"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Camera/CameraView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.dia",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/CameraView.swiftdeps"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/History/HistoryView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.dia",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/HistoryView.swiftdeps"
+  }
+}

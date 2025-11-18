@@ -1,0 +1,32 @@
+{
+  "source": "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/ContentView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Item at %@",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Item",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select an item",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 38
+        }
+      }
+    ]
+  },
+  "version": 1
+}

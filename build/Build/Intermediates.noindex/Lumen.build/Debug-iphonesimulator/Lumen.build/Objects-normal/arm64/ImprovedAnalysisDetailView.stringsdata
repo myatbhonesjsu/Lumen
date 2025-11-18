@@ -1,0 +1,112 @@
+{
+  "source": "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Analysis/ImprovedAnalysisDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Skin Age: %lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "Analysis Complete",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 177
+        }
+      },
+      {
+        "comment": "",
+        "key": "%",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 181
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your skin health is %@",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 270
+        }
+      },
+      {
+        "comment": "",
+        "key": "Top 3 Priorities",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 290
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 327
+        }
+      },
+      {
+        "comment": "",
+        "key": "Do This Today",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 378
+        }
+      },
+      {
+        "comment": "",
+        "key": "All Metrics",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 427
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 461
+        }
+      },
+      {
+        "comment": "",
+        "key": "Good",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 473
+        }
+      },
+      {
+        "comment": "",
+        "key": "Watch",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 473
+        }
+      },
+      {
+        "comment": "",
+        "key": "AI Insights",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 500
+        }
+      }
+    ]
+  },
+  "version": 1
+}

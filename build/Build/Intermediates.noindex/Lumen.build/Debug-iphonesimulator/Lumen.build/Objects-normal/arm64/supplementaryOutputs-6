@@ -1,0 +1,23 @@
+{
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Onboarding/ImprovedOnboardingView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.dia",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/ImprovedOnboardingView.swiftdeps"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Onboarding/OnboardingView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.dia",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/OnboardingView.swiftdeps"
+  },
+  "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Recommendations/RecommendationsView.swift" : {
+    "const-values" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.swiftconstvalues",
+    "dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.d",
+    "diagnostics" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.dia",
+    "object" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.o",
+    "swift-dependencies" : "/Users/myatbhonesan/Desktop/CMPE272/Lumen/build/Build/Intermediates.noindex/Lumen.build/Debug-iphonesimulator/Lumen.build/Objects-normal/arm64/RecommendationsView.swiftdeps"
+  }
+}

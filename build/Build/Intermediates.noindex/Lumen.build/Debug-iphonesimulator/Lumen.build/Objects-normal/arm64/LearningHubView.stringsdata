@@ -1,0 +1,56 @@
+{
+  "source": "/Users/myatbhonesan/Desktop/CMPE272/Lumen/Lumen/Views/Learning/LearningHubView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Learning Hub",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 309
+        }
+      },
+      {
+        "comment": "",
+        "key": "Evidence-based information to help you make informed decisions about your skin health",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 269
+        }
+      },
+      {
+        "comment": "",
+        "key": "Learn About Skincare",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 264
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld min read",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 346
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld min read",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 395
+        }
+      },
+      {
+        "comment": "",
+        "key": "Verified",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 399
+        }
+      }
+    ]
+  },
+  "version": 1
+}
