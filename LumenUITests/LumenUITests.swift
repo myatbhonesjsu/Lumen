@@ -41,62 +41,10 @@ final class LumenUITests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         app.terminate()
     }
-
-// MARK: Test 1 - Happy Path
     
-    func testOnboarding_HappyPath_CompletesAndShowsHome() throws {
-        // Page 0 (Welcome)
-        XCTAssertTrue(app.buttons["nav.next"].waitForExistence(timeout: 3), "Next button should exist on Welcome page")
-        app.buttons["nav.next"].tap()
-        
-        // Page 1 (Name)
-        let name = app.textFields["onboarding.nameField"]
-        XCTAssertTrue(name.waitForExistence(timeout: 3), "Name field should exist on page 1")
-        name.tap()
-        name.typeText("Spartan")
-        app.buttons["nav.next"].tap()
-
-        // Page 2 (Skin Concerns)
-        let acne = app.buttons["concern.Acne & Breakouts"]
-        XCTAssertTrue(acne.waitForExistence(timeout: 3), "Concern button should be visible on page 2")
-        acne.tap()
-        app.buttons["nav.next"].tap()
-
-        // Page 3 (Goal)
-        let goal = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'goal.'")).firstMatch
-        XCTAssertTrue(goal.waitForExistence(timeout: 3), "Goal options should be visible on page 3")
-        goal.tap()
-        app.buttons["nav.next"].tap()
-
-        // Page 4 (Body Metrics)
-        let age = app.textFields["metrics.age"]
-        XCTAssertTrue(age.waitForExistence(timeout: 3), "Body Metrics fields should exist on page 4")
-        age.tap();
-        age.typeText("28")
-        
-        let height = app.textFields["metrics.height"]
-        height.tap()
-        height.typeText("75")
-        
-        let weight = app.textFields["metrics.weight"]
-        weight.tap()
-        weight.typeText("170")
-        
-        // Get Started
-        let getStarted = app.buttons["nav.getStarted"]
-        XCTAssertTrue(getStarted.isEnabled, "Get Started should be enabled after valid metrics")
-        getStarted.tap()
-        
-        // Land on home screen after onboarding
-        let homeHeader = app.staticTexts["Skin Analysis"]
-        XCTAssertTrue(homeHeader.waitForExistence(timeout: 6), "Home screen did not appear after onboarding.")
-        
-
-    }
+// MARK: Test 1 - Required/Optional Onboarding + Happy Path
     
-// MARK: Test 2 - Required/Optional Onboarding
-    
-    func testOnboarding_NameIsRequired_DisablesNext() {
+    func test_01_Onboarding_01_NameIsRequired_DisablesNext() {
         app.buttons["nav.next"].tap() // welcome → name
         let next = app.buttons["nav.next"]
         XCTAssertTrue(next.exists)
@@ -116,7 +64,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertFalse(next.isEnabled, "Next should be disabled when name is empty")
     }
     
-    func testOnboarding_BackNavigates() {
+    func test_01_Onboarding_02_BackNavigates() {
         app.buttons["nav.next"].tap()
         app.textFields["onboarding.nameField"].typeText("Ray")
         app.buttons["nav.next"].tap()
@@ -124,7 +72,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(app.textFields["onboarding.nameField"].waitForExistence(timeout: 3))
     }
 
-    func testOnboarding_MetricsOptional_AllowsBlank() {
+    func test_01_Onboarding_03_MetricsOptional_AllowsBlank() {
         // Go to metrics quickly
         app.buttons["nav.next"].tap()
         app.textFields["onboarding.nameField"].typeText("Ray")
@@ -139,38 +87,69 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(getStarted.isEnabled, "Get Started should be enabled when metrics are blank (optional)")
     }
     
-    func testLaunch_SkipsOnboarding_AfterCompletion() {
-        // First launch: complete onboarding once
-        app = XCUIApplication()
-        app.launchArguments = ["USE_MOCK_BACKEND"]
-        app.launch()
-
-        app.buttons["nav.next"].tap()
-        app.textFields["onboarding.nameField"].tap()
-        app.textFields["onboarding.nameField"].typeText("Ray")
+    func test_01_Onboarding_04_FullFlowAndSkipOnRelaunch() throws {
+        // Page 0 – Welcome
+        XCTAssertTrue(app.buttons["nav.next"].waitForExistence(timeout: 3))
         app.buttons["nav.next"].tap()
 
-        app.buttons["concern.Acne & Breakouts"].tap()
+        // Page 1 – Name
+        let name = app.textFields["onboarding.nameField"]
+        XCTAssertTrue(name.waitForExistence(timeout: 3))
+        name.tap()
+        name.typeText("Ray")
         app.buttons["nav.next"].tap()
 
-        app.buttons.matching(
-            NSPredicate(format: "identifier BEGINSWITH 'goal.'")
-        ).firstMatch.tap()
+        // Page 2 – Skin Concern
+        let concern = app.buttons["concern.Acne & Breakouts"]
+        XCTAssertTrue(concern.waitForExistence(timeout: 3))
+        concern.tap()
         app.buttons["nav.next"].tap()
 
-        app.buttons["nav.getStarted"].tap()
+        // Page 3 – Goal
+        let goal = app.buttons
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'goal.'"))
+            .firstMatch
+        XCTAssertTrue(goal.waitForExistence(timeout: 3))
+        goal.tap()
+        app.buttons["nav.next"].tap()
 
-        // Relaunch: should skip onboarding
+        // Page 4 – Metrics
+        let age = app.textFields["metrics.age"]
+        XCTAssertTrue(age.waitForExistence(timeout: 3))
+        age.tap()
+        age.typeText("28")
+
+        let height = app.textFields["metrics.height"]
+        height.tap()
+        height.typeText("75")
+
+        let weight = app.textFields["metrics.weight"]
+        weight.tap()
+        weight.typeText("170")
+
+        let getStarted = app.buttons["nav.getStarted"]
+        XCTAssertTrue(getStarted.isEnabled)
+        getStarted.tap()
+
+        // Arrive on Home
+        let homeHeader = app.staticTexts["Skin Analysis"]
+        XCTAssertTrue(homeHeader.waitForExistence(timeout: 6))
+
+        // Relaunch: Should Skip Onboarding Automatically
         app.terminate()
         app = XCUIApplication()
         app.launchArguments = ["USE_MOCK_BACKEND"]
         app.launch()
 
-        let homeHeader = app.staticTexts["Skin Analysis"]
-        XCTAssertTrue(homeHeader.waitForExistence(timeout: 6), "Home screen did not appear after onboarding.")
+        // Should land directly on Home
+        let homeHeader2 = app.staticTexts["Skin Analysis"]
+        XCTAssertTrue(
+            homeHeader2.waitForExistence(timeout: 6),
+            "App did NOT skip onboarding on the second launch!"
+        )
     }
-    
-// MARK: Test 3 - Home
+
+// MARK: Test 2 - Home
     
     func ensureAtHome(file: StaticString = #filePath, line: UInt = #line) {
         // on Home?
@@ -206,7 +185,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(homeHeader.waitForExistence(timeout: 6), "Home screen did not appear after onboarding.")
     }
     
-    func testHome_Smoke_ShowsKeyActions() {
+    func test_02_Home_01_Smoke_ShowsKeyActions() {
         ensureAtHome()
 
         // Just verify Home is visible and the section header exists.
@@ -218,7 +197,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(app.buttons["home.learn"].waitForExistence(timeout: 5))
     }
     
-    func testHome_Tiles_Exist() {
+    func test_02_Home_02_Tiles_Exist() {
         ensureAtHome()
 
         let newScan = app.buttons.containing(NSPredicate(format: "label CONTAINS 'New Scan'")).firstMatch
@@ -232,40 +211,28 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(learn.waitForExistence(timeout: 5))
     }
 
-    func testHome_TileNavigation_Analyze_Simple() {
+    func test_02_Home_03_TileNavigation_Analyze() {
         ensureAtHome()
 
-        // Find the Analyze tile by id
+        // Tap the Analyze tile
         let analyzeTile = app.buttons["home.analyze"]
-        XCTAssertTrue(
-            analyzeTile.waitForExistence(timeout: 5),
-            "Analyze tile not found on Home"
-        )
-
-        // Tap it
+        XCTAssertTrue(analyzeTile.waitForExistence(timeout: 5), "Analyze tile not found on Home")
         analyzeTile.tap()
 
-        // We should now be on the scan screen
+        // Handle camera permission popup (first run only)
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let allowButton = springboard.buttons["Allow"]
+        if allowButton.waitForExistence(timeout: 3) {
+            allowButton.tap()
+        }
+
+        // Verify scan screen appears
         let scan = app.anyElement(withId: "scan.screen")
-        XCTAssertTrue(
-            scan.waitForExistence(timeout: 6),
-            "Scan screen did not appear"
-        )
+        XCTAssertTrue(scan.waitForExistence(timeout: 6), "Scan screen did not appear")
     }
-    
-    func testHome_TileNavigation_Analyze() {
-        ensureAtHome()
 
-        let analyze = app.buttons.containing(NSPredicate(format: "label CONTAINS 'New Scan'")).firstMatch
-        XCTAssertTrue(analyze.waitForExistence(timeout: 5))
-        analyze.tap()
-
-        // Camera screen identifier
-        let scanScreen = app.staticTexts["scan.screen"]
-        XCTAssertTrue(scanScreen.waitForExistence(timeout: 6), "Scan screen did not appear")
-    }
     
-    func testHome_TileNavigation_History() {
+    func test_02_Home_04_TileNavigation_History() {
         ensureAtHome()
 
         let history = app.buttons.containing(NSPredicate(format: "label CONTAINS 'History'")).firstMatch
@@ -277,7 +244,7 @@ final class LumenUITests: XCTestCase {
     }
 
 
-    func testHome_TileNavigation_Chat() {
+    func test_02_Home_05_TileNavigation_Chat() {
         ensureAtHome()
 
         let chat = app.buttons.containing(NSPredicate(format: "label CONTAINS 'AI Chat'")).firstMatch
@@ -288,7 +255,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(chatScreen.waitForExistence(timeout: 8), "Chat screen did not appear")
     }
 
-    func testHome_TileNavigation_Learn() {
+    func test_02_Home_06_TileNavigation_Learn() {
         ensureAtHome()
 
         let learn = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Learn'")).firstMatch
@@ -299,7 +266,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(learnScreen.waitForExistence(timeout: 8), "Learn screen did not appear")
     }
 
-    func testHome_Scroll() {
+    func test_02_Home_07_Scroll() {
         ensureAtHome()
 
         let scrollView = app.scrollViews.firstMatch
@@ -309,7 +276,7 @@ final class LumenUITests: XCTestCase {
         scrollView.swipeDown()
     }
     
-    func testHome_TakePhotoCTA() {
+    func test_02_Home_08_TakePhotoCTA() {
         ensureAtHome()
 
         let scrollView = app.scrollViews.firstMatch
@@ -323,7 +290,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(scanScreen.waitForExistence(timeout: 6))
     }
 
-    func testHome_TabBar() {
+    func test_02_Home_09_TabBar() {
         ensureAtHome()
 
         app.buttons["History"].tap()
@@ -339,7 +306,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Skin Analysis"].waitForExistence(timeout: 5))
     }
 
-// MARK: Test 4 - Camera
+// MARK: Test 3 - Camera
 
     private func openScanFromHome(file: StaticString = #filePath, line: UInt = #line) {
         ensureAtHome(file: file, line: line)
@@ -357,7 +324,7 @@ final class LumenUITests: XCTestCase {
     }
     
     // Camera opens and shows scan screen
-    func testCamera_FromHome_ShowsScanScreen() {
+    func test_03_Camera_01_FromHome_ShowsScanScreen() {
         openScanFromHome()
 
         let scanScreen = app.anyElement(withId: "scan.screen")
@@ -368,7 +335,7 @@ final class LumenUITests: XCTestCase {
     }
 
     // Close button returns to Home
-    func testCamera_Close_ReturnsHome() {
+    func test_03_Camera_02_Close_ReturnsHome() {
         openScanFromHome()
 
         let scanScreen = app.anyElement(withId: "scan.screen")
@@ -392,7 +359,7 @@ final class LumenUITests: XCTestCase {
 
 
     // Shutter button exists (and is tappable)
-    func testCamera_ShutterButton_VisibleAndTappable() {
+    func test_03_Camera_03_ShutterButton_VisibleAndTappable() {
         openScanFromHome()
 
         let scanScreen = app.anyElement(withId: "scan.screen")
@@ -415,9 +382,9 @@ final class LumenUITests: XCTestCase {
     }
     
     
-// MARK: Test 5 - History
+// MARK: Test 4 - History
     
-    func testHistory_OpenEntryIfExists() {
+    func test_04_History_01_OpenEntryIfExists() {
         ensureAtHome()
 
         // Go to history
@@ -447,9 +414,9 @@ final class LumenUITests: XCTestCase {
         }
     }
 
-// MARK: Test 6 - Learn/Chat
+// MARK: Test 5 - Learn/Chat
     
-    func testLearn_ContentLoads() {
+    func test_05_Learn_01_ContentLoads() {
         ensureAtHome()
 
         app.buttons["Learn"].tap()
@@ -466,7 +433,7 @@ final class LumenUITests: XCTestCase {
         XCTAssertTrue(suggestion.exists, "Learn screen has no suggestion cards")
     }
 
-// MARK: Test 7 - Learn (Articles) if needed
+// MARK: Test 6 - Learn (Articles) if needed
     
 
     
