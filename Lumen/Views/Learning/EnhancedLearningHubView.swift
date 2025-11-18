@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import Combine
 
 struct EnhancedLearningHubView: View {
@@ -461,71 +462,20 @@ struct SampleQuestionButton: View {
 // MARK: - Recommendations View
 
 struct LearningRecommendationsView: View {
+    @Query(sort: \SkinMetric.timestamp, order: .reverse) private var analyses: [SkinMetric]
     @State private var recommendations: PersonalizedRecommendations?
     @State private var isLoading = true
     @State private var selectedArticle: ArticleRecommendation?
 
+    private var hasAnalyses: Bool {
+        !analyses.isEmpty
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Header
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Image(systemName: "star.fill")
-                            .font(.title2)
-                            .foregroundStyle(.yellow)
-
-                        Text("Personalized For You")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                    }
-
-                    if let recs = recommendations {
-                        Text("Based on your \(recs.totalAnalyses) skin analyses")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        if !recs.basedOnConditions.isEmpty {
-                            HStack {
-                                Text("Focus areas:")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-
-                                ForEach(recs.basedOnConditions, id: \.self) { condition in
-                                    Text(condition.replacingOccurrences(of: "_", with: " ").capitalized)
-                                        .font(.caption)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.yellow.opacity(0.2))
-                                        .cornerRadius(8)
-                                }
-                            }
-                        }
-                    }
-                }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.yellow.opacity(0.1))
-                .cornerRadius(16)
-                .padding(.horizontal)
-                .padding(.top)
-
-                // Recommendations
-                if isLoading {
-                    ProgressView()
-                        .tint(.yellow)
-                        .padding()
-                } else if let recs = recommendations {
-                    LazyVStack(spacing: 16) {
-                        ForEach(recs.recommendations) { article in
-                            LearningArticleCard(article: article)
-                                .onTapGesture {
-                                    selectedArticle = article
-                                }
-                        }
-                    }
-                    .padding(.horizontal)
-                } else {
+                // Only show content if user has at least one analysis
+                if !hasAnalyses {
                     VStack(spacing: 16) {
                         Image(systemName: "photo.on.rectangle.angled")
                             .font(.system(size: 50))
@@ -541,6 +491,48 @@ struct LearningRecommendationsView: View {
                             .padding(.horizontal)
                     }
                     .padding()
+                    .padding(.top, 100)
+                } else {
+                    // Header
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "star.fill")
+                                .font(.title2)
+                                .foregroundStyle(.yellow)
+
+                            Text("Personalized For You")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                        }
+                    }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.yellow.opacity(0.1))
+                    .cornerRadius(16)
+                    .padding(.horizontal)
+                    .padding(.top)
+
+                    // Recommendations
+                    if isLoading {
+                        ProgressView()
+                            .tint(.yellow)
+                            .padding()
+                    } else if let recs = recommendations {
+                        LazyVStack(spacing: 16) {
+                            ForEach(recs.recommendations) { article in
+                                LearningArticleCard(article: article)
+                                    .onTapGesture {
+                                        selectedArticle = article
+                                    }
+                            }
+                        }
+                        .padding(.horizontal)
+                    } else {
+                        Text("No recommendations available")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding()
+                    }
                 }
 
                 Spacer(minLength: 100)
@@ -559,6 +551,12 @@ struct LearningRecommendationsView: View {
     }
 
     private func loadRecommendations() async {
+        // Only load recommendations if user has at least one analysis
+        guard hasAnalyses else {
+            isLoading = false
+            return
+        }
+
         isLoading = true
         do {
             recommendations = try await LearningHubService.shared.getPersonalizedRecommendations()
