@@ -485,10 +485,10 @@ final class LumenUITests: XCTestCase {
         )
         forYouTab.tap()
 
-        let header = app.staticTexts["Personalized For You"]
+        let header = app.staticTexts["No recommendations yet"]
         XCTAssertTrue(
             header.waitForExistence(timeout: 6),
-            "'Personalized For You' header did not appear on recommendations tab"
+            "'No recommendations yet' header did not appear on recommendations tab"
         )
     }
     
