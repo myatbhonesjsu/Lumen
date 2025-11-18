@@ -432,7 +432,7 @@ final class LumenUITests: XCTestCase {
         )
     }
 
-    func test_05_Learn_01_TabBar_OpensChatHero() {
+    func test_05_Learn_01_TabBar_OpensChat() {
         openLearnFromTabBar()
 
         let header = app.staticTexts["Your AI Skincare Assistant"]
@@ -491,32 +491,82 @@ final class LumenUITests: XCTestCase {
             "'Personalized For You' header did not appear on recommendations tab"
         )
     }
+    
+    func test_05_Learn_04_ChatSuggestion_SendsMessageAndGetsReply() {
+        openLearnFromTabBar()
 
-    func test_05_Learn_04_HomeChatTile_OpensChatOnLearn() {
-        ensureAtHome()
-
-        let chatTile = app.buttons["home.chat"]
+        let suggestion = app.staticTexts["What's the best routine for my skin?"]
         XCTAssertTrue(
-            chatTile.waitForExistence(timeout: 5),
-            "Home AI Chat tile not found"
+            suggestion.waitForExistence(timeout: 5),
+            "Chat suggestion card 'What's the best routine for my skin?' was not visible on Learn Chat"
         )
-        chatTile.tap()
+        suggestion.tap()
 
-        let learnScreen = app.anyElement(withId: "learn.screen")
+        let questionBubble = app.staticTexts["What's the best routine for my skin?"]
         XCTAssertTrue(
-            learnScreen.waitForExistence(timeout: 5),
-            "Learn screen did not appear after tapping AI Chat tile"
+            questionBubble.waitForExistence(timeout: 5),
+            "Question bubble did not appear in the chat after tapping the suggestion"
         )
 
-        let header = app.staticTexts["Your AI Skincare Assistant"]
+        // Verify AI response
+        let thinking = app.staticTexts["Thinking..."]
         XCTAssertTrue(
-            header.waitForExistence(timeout: 5),
-            "Chat hero header not visible after opening from AI Chat tile"
+            thinking.waitForExistence(timeout: 5),
+            "\"Thinking...\" indicator did not appear after sending the question"
+        )
+
+        // Wait for "Thinking..." to disappear
+        let gonePredicate = NSPredicate(format: "exists == false")
+        expectation(for: gonePredicate, evaluatedWith: thinking)
+        waitForExpectations(timeout: 20)
+
+        let allMessages = app.staticTexts.allElementsBoundByIndex
+
+        let sentQuestion = "What's the best routine for my skin?"
+
+        let replyMessages = allMessages.filter {
+            let text = $0.label.trimmingCharacters(in: .whitespacesAndNewlines)
+            return text.count > 0 && text != sentQuestion && text != "Thinking..."
+        }
+
+        XCTAssertFalse(
+            replyMessages.isEmpty,
+            "AI assistant reply did not appear after \"Thinking...\" finished"
         )
     }
 
-    // More tests if needed
-    
+    func test_05_Learn_05_ArticleCard_OpensDetail() {
+        openLearnFromTabBar()
+        let articlesTab = app.buttons["Articles"]
+        XCTAssertTrue(
+            articlesTab.waitForExistence(timeout: 3),
+            "Articles tab not visible in Learn segmented control"
+        )
+        articlesTab.tap()
+
+        let articleTitle = "Acne: Diagnosis and Treatment"
+        let articleCard  = app.staticTexts[articleTitle]
+
+        XCTAssertTrue(
+            articleCard.waitForExistence(timeout: 5),
+            "Sample article card '\(articleTitle)' not found on Articles list"
+        )
+
+        articleCard.tap()
+
+        // Detail screen title visible
+        let detailTitle = app.staticTexts[articleTitle]
+        XCTAssertTrue(
+            detailTitle.waitForExistence(timeout: 5),
+            "Article detail did not open for '\(articleTitle)'"
+        )
+
+        let readButton = app.buttons["Read Full Article"]
+        XCTAssertTrue(
+            readButton.waitForExistence(timeout: 5),
+            "'Read Full Article' button not visible on article detail"
+        )
+    }
     
     
     
