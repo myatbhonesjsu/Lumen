@@ -28,6 +28,7 @@ S3_BUCKET = os.environ['S3_BUCKET']
 HUGGINGFACE_URL = os.environ['HUGGINGFACE_URL']
 BEDROCK_AGENT_ID = os.environ.get('BEDROCK_AGENT_ID', '')
 OPENSEARCH_ENDPOINT = os.environ.get('OPENSEARCH_ENDPOINT', '')
+CUSTOM_MODEL_URL = os.environ.get('CUSTOM_MODEL_URL', '')
 
 # DynamoDB tables
 analyses_table = dynamodb.Table(ANALYSES_TABLE)
@@ -198,9 +199,21 @@ def process_s3_upload(event):
         image_obj = s3.get_object(Bucket=bucket, Key=key)
         image_bytes = image_obj['Body'].read()
         
-        # Stage 1: Call Hugging Face for prediction
+        # Stage 1: Call Hugging Face for prediction (and optional custom model)
         print("Stage 1: Calling Hugging Face...")
-        prediction = call_huggingface(image_bytes)
+        hf_prediction = call_huggingface(image_bytes)
+
+        custom_prediction = None
+        if CUSTOM_MODEL_URL:
+            try:
+                print("Stage 1b: Calling custom model...")
+                custom_prediction = call_custom_model(image_bytes)
+            except Exception as e:
+                print(f"Custom model call failed: {str(e)}")
+                custom_prediction = None
+
+        # Combine predictions (if custom model provided) into a single prediction dict
+        prediction = combine_model_predictions([p for p in [hf_prediction, custom_prediction] if p is not None])
 
         # Stage 2: Call Bedrock Agent for enhanced analysis (optional)
         enhanced = None
@@ -278,6 +291,115 @@ def call_huggingface(image_bytes):
     except Exception as e:
         print(f"Hugging Face API error: {str(e)}")
         raise
+
+
+def call_custom_model(image_bytes):
+    """Call the user-provided custom model endpoint (expects same kind of response as HF)"""
+    if not CUSTOM_MODEL_URL:
+        raise RuntimeError("CUSTOM_MODEL_URL not configured")
+
+    files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
+
+    response = requests.post(CUSTOM_MODEL_URL, files=files, timeout=30)
+    response.raise_for_status()
+
+    data = response.json()
+
+    # Try to normalize response to same schema
+    confidence_val = data.get('confidence', data.get('probability', 0.0))
+    all_conditions = data.get('all_predictions', data.get('all_conditions', {}))
+
+    all_conditions_decimal = {k: Decimal(str(v)) for k, v in all_conditions.items()}
+
+    prediction = {
+        'condition': data.get('top_prediction', data.get('prediction', 'Unknown')),
+        'confidence': Decimal(str(confidence_val)),
+        'all_conditions': all_conditions_decimal,
+        'timestamp': datetime.utcnow().isoformat()
+    }
+
+    print(f"Custom model prediction: {prediction['condition']} ({float(prediction['confidence']):.2%})")
+    return prediction
+
+
+def combine_model_predictions(preds):
+    """Combine multiple model prediction dicts into a single prediction.
+
+    Each prediction dict should contain keys: 'condition', 'confidence' (Decimal), 'all_conditions' (mapping)
+    Strategy:
+      - If only one prediction is available, return it.
+      - If multiple:
+          * If majority agree on same label, average confidences and boost slightly.
+          * If disagree, pick label with highest average confidence across models.
+      - Merge all_conditions by averaging probabilities (missing labels treated as 0).
+    """
+    if not preds:
+        raise ValueError("No predictions to combine")
+
+    if len(preds) == 1:
+        return preds[0]
+
+    # Collect label set
+    label_set = set()
+    for p in preds:
+        label_set.update(p.get('all_conditions', {}).keys())
+        label_set.add(p.get('condition'))
+
+    # Average confidences per label
+    avg_scores = {}
+    for label in label_set:
+        total = 0.0
+        count = 0
+        for p in preds:
+            scores = p.get('all_conditions', {})
+            if label in scores:
+                total += float(scores[label])
+                count += 1
+            else:
+                # if model doesn't report the label, try if it's the top condition
+                if p.get('condition') == label:
+                    total += float(p.get('confidence', 0.0))
+                    count += 1
+        avg_scores[label] = (total / count) if count > 0 else 0.0
+
+    # Determine top label by avg score
+    top_label = max(avg_scores.items(), key=lambda x: x[1])[0]
+
+    # Compute averaged confidence for top label
+    top_conf_values = []
+    for p in preds:
+        if p.get('condition') == top_label:
+            top_conf_values.append(float(p.get('confidence', 0.0)))
+        else:
+            # if not top, check all_conditions
+            val = p.get('all_conditions', {}).get(top_label)
+            if val is not None:
+                top_conf_values.append(float(val))
+
+    if top_conf_values:
+        combined_conf = sum(top_conf_values) / len(top_conf_values)
+    else:
+        combined_conf = avg_scores.get(top_label, 0.0)
+
+    # Small boost if all models agree
+    agreed_count = sum(1 for p in preds if p.get('condition') == top_label)
+    if agreed_count == len(preds):
+        combined_conf = min(0.99, combined_conf + 0.05)
+
+    # Merge all_conditions by averaging
+    merged_all = {}
+    for label, score in avg_scores.items():
+        merged_all[label] = Decimal(str(score))
+
+    combined = {
+        'condition': top_label,
+        'confidence': Decimal(str(combined_conf)),
+        'all_conditions': merged_all,
+        'timestamp': datetime.utcnow().isoformat()
+    }
+
+    print(f"Combined prediction: {combined['condition']} ({float(combined['confidence']):.2%})")
+    return combined
 
 
 def call_bedrock_agent(prediction, user_id, session_id=None):
