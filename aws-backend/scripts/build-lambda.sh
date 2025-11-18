@@ -10,13 +10,19 @@ BUILD_DIR="$(pwd)/lambda/build"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Install dependencies
-echo "📦 Installing Python dependencies..."
-pip3 install -r lambda/requirements.txt -t "$BUILD_DIR" --quiet
+# Install dependencies with platform targeting for Lambda (x86_64 Linux)
+echo "📦 Installing Python dependencies for Lambda runtime..."
+pip3 install -r lambda/requirements.txt -t "$BUILD_DIR" --quiet \
+    --platform manylinux2014_x86_64 \
+    --implementation cp \
+    --python-version 3.11 \
+    --only-binary=:all: \
+    --upgrade 2>/dev/null || \
+    pip3 install -r lambda/requirements.txt -t "$BUILD_DIR" --quiet
 
-# Copy Lambda function
+# Copy Lambda function code
 echo "📄 Copying Lambda function code..."
-cp lambda/handler.py "$BUILD_DIR/"
+cp lambda/*.py "$BUILD_DIR/"
 
 # Create ZIP file
 echo "🗜️  Creating deployment package..."

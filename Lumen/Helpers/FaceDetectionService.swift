@@ -22,7 +22,9 @@ class FaceDetectionService {
             return (0, 0.0)
         }
 
-        let request = VNDetectFaceRectanglesRequest()
+        // Use more advanced face detection with landmarks for better accuracy
+        let request = VNDetectFaceLandmarksRequest()
+        request.revision = VNDetectFaceLandmarksRequestRevision3  // Latest version
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
 
         do {
@@ -48,10 +50,13 @@ class FaceDetectionService {
     func validateImage(_ image: UIImage) -> ValidationResult {
         let (faceCount, quality) = detectFaces(in: image)
 
+        print("🔍 Face Detection: Found \(faceCount) faces, quality: \(String(format: "%.2f", quality))")
+
         if faceCount == 0 {
+            print("❌ No face detected in image")
             return ValidationResult(
                 isValid: false,
-                message: "No face detected. Please take a clear photo of your face.",
+                message: "No face detected. Please take a clear photo of your face in good lighting.",
                 faceCount: 0,
                 quality: 0.0
             )
@@ -66,15 +71,18 @@ class FaceDetectionService {
             )
         }
 
-        if quality < 0.3 {
+        // Very lenient quality check - accept almost any detected face
+        if quality < 0.05 {
+            print("⚠️ Face quality too low: \(String(format: "%.2f", quality)) (minimum: 0.05)")
             return ValidationResult(
                 isValid: false,
-                message: "Face is too small or far away. Please move closer to the camera.",
+                message: "Face is too small or far away. Please move closer and center your face.",
                 faceCount: faceCount,
                 quality: quality
             )
         }
 
+        print("✅ Face validation passed: \(faceCount) face(s), quality: \(String(format: "%.2f", quality))")
         return ValidationResult(
             isValid: true,
             message: "Face detected successfully",
@@ -95,18 +103,20 @@ class FaceDetectionService {
         let faceCenterY = face.boundingBox.midY
         let centerDistance = sqrt(pow(faceCenterX - 0.5, 2) + pow(faceCenterY - 0.5, 2))
 
-        // Quality factors:
-        // - Size: Face should be 15-70% of image
-        let sizeScore = min(1.0, max(0.0, (faceSize - 0.15) / 0.55))
+        // Quality factors - very lenient scoring:
+        // - Size: Accept faces from 5% to 95% of image
+        let sizeScore = min(1.0, max(0.0, (faceSize - 0.05) / 0.90))
 
-        // - Position: Face should be centered (distance from center)
-        let positionScore = max(0.0, 1.0 - centerDistance * 2)
+        // - Position: More lenient on position (doesn't need to be perfectly centered)
+        let positionScore = max(0.0, 1.0 - centerDistance)
 
         // - Confidence from Vision framework
         let confidenceScore = Double(face.confidence)
 
-        // Weighted average
-        let quality = (sizeScore * 0.4) + (positionScore * 0.3) + (confidenceScore * 0.3)
+        // Weighted average - confidence is most important
+        let quality = (sizeScore * 0.3) + (positionScore * 0.2) + (confidenceScore * 0.5)
+
+        print("📊 Face Quality Details: size=\(String(format: "%.2f", faceSize)), sizeScore=\(String(format: "%.2f", sizeScore)), posScore=\(String(format: "%.2f", positionScore)), confScore=\(String(format: "%.2f", confidenceScore)), final=\(String(format: "%.2f", quality))")
 
         return quality
     }

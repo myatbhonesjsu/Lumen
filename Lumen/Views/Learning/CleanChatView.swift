@@ -225,6 +225,16 @@ struct CleanChatView: View {
             .sheet(item: $selectedArticle) { article in
                 ArticleWebView(article: article)
             }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenChatbotWithMessage"))) { notification in
+                if let message = notification.userInfo?["message"] as? String {
+                    // Set the message in input and send it
+                    inputText = message
+                    // Small delay to ensure UI is ready
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        sendMessage()
+                    }
+                }
+            }
         }
         .accessibilityIdentifier("chat.screen")
 

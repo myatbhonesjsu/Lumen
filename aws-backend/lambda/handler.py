@@ -586,8 +586,41 @@ def update_analysis_results(analysis_id, user_id, prediction, enhanced, products
 
         print(f"Updated analysis {analysis_id} in DynamoDB")
 
+        # TRIGGER: Automatically generate personalized insight after analysis is saved
+        try:
+            trigger_personalized_insight_generation(user_id, analysis_id)
+        except Exception as e:
+            print(f"Warning: Failed to trigger personalized insight generation: {e}")
+            # Don't fail the analysis update if insight generation fails
+
     except Exception as e:
         print(f"Error updating DynamoDB: {str(e)}")
+        raise
+
+
+def trigger_personalized_insight_generation(user_id, analysis_id):
+    """Asynchronously trigger personalized insights generator Lambda"""
+    try:
+        prefix = os.environ.get('LAMBDA_PREFIX', 'lumen-skincare-dev')
+        function_name = f"{prefix}-personalized-insights-generator"
+
+        # Invoke asynchronously (Event type) so it doesn't block analysis response
+        lambda_client = boto3.client('lambda')
+        response = lambda_client.invoke(
+            FunctionName=function_name,
+            InvocationType='Event',  # Asynchronous invocation
+            Payload=json.dumps({
+                'user_id': user_id,
+                'analysis_id': analysis_id,
+                'location': None  # Could be enhanced to get user location
+            })
+        )
+
+        print(f"✅ Triggered personalized insight generation for analysis {analysis_id}")
+        return response
+
+    except Exception as e:
+        print(f"❌ Error triggering personalized insight generation: {e}")
         raise
 
 
