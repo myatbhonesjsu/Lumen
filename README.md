@@ -22,10 +22,13 @@ Lumen is an AI-powered skincare assistant iOS application that analyzes skin con
 - Skin age estimation and overall health scoring
 - Historical analysis with folder organization
 
-### AI-Powered Agents
-1. **Skin Analyst** - Personalized skincare recommendations based on analysis results
-2. **Routine Coach** - Motivational guidance for maintaining consistent skincare habits
-3. **RAG Integration** - Knowledge base queries for evidence-based ingredient research
+### AI-Powered Features
+1. **Skin Analysis** - ML-based condition detection with dual-model validation
+2. **Learning Hub Chatbot** - RAG-enhanced conversational AI with Bedrock Claude 3.5
+3. **Daily Insights** - Multi-agent orchestrator for personalized tips (weather, location, skin condition)
+4. **Personalized Routines** - AI-generated morning/evening skincare routines
+5. **Agent Chat** - GPT-4o powered Skin Analyst and Routine Coach
+6. **Knowledge Base** - Pinecone RAG for evidence-based recommendations
 
 ### Data Management
 - Local-first storage using SwiftData
@@ -42,13 +45,15 @@ Lumen is an AI-powered skincare assistant iOS application that analyzes skin con
 - Minimum iOS 18.6+
 
 ### AWS Backend
-- **Compute**: AWS Lambda (Python 3.11)
-- **API**: API Gateway with Cognito authentication
+- **Compute**: AWS Lambda (Python 3.11) - 5 serverless functions
+- **API**: 2 API Gateway instances with Cognito authentication
 - **Authentication**: AWS Cognito User Pools
-- **AI Services**: Hugging Face inference endpoint (skin analysis), OpenAI GPT-4o (agents)
-- **Orchestration**: Native OpenAI tool-calling loop (agentic flow, no agentic framework)
-- **Vector Database**: Pinecone (knowledge base)
-- **Storage**: Amazon S3 (images), DynamoDB (analysis results)
+- **AI Services**:
+  - Hugging Face inference endpoint (skin analysis)
+  - AWS Bedrock Claude 3.5 Sonnet v2 (Learning Hub chatbot, daily insights)
+  - OpenAI GPT-4o (agent chat, insights generation)
+- **RAG**: Pinecone vector database + Bedrock Titan embeddings
+- **Storage**: Amazon S3 (images), DynamoDB (9 tables for analytics, chat, insights)
 - **Infrastructure**: Terraform-managed
 - **Region**: us-east-1
 
@@ -81,20 +86,24 @@ Lumen/
 │   │   └── ProgressTrackingService.swift
 │   └── LumenApp.swift
 ├── aws-backend/                    # Backend Infrastructure
-│   ├── lambda/                     # Lambda functions
-│   │   ├── handler.py
-│   │   ├── personalized_insights_generator.py
-│   │   ├── rag_query_handler.py
+│   ├── lambda/                     # Lambda functions (5 total)
+│   │   ├── handler.py                              # Skin analysis pipeline
+│   │   ├── learning_hub_handler.py                 # Chatbot & Learning Hub
+│   │   ├── daily_insights_orchestrator.py          # Multi-agent insights
+│   │   ├── personalized_insights_generator.py      # Agent chat (GPT-4o)
+│   │   ├── rag_query_handler.py                    # Pinecone RAG queries
 │   │   └── pinecone_http_client.py
 │   ├── terraform/                  # Infrastructure as Code
 │   │   ├── main.tf
 │   │   ├── cognito.tf
 │   │   ├── lambda.tf
-│   │   └── api_gateway.tf
-│   └── scripts/                    # Deployment scripts
-│       └── build-lambda.sh
-└── docs/                           # Documentation
-    └── CLAUDE.md
+│   │   ├── lambda_additional.tf    # Learning Hub & Daily Insights Lambdas
+│   │   ├── api_gateway.tf
+│   │   ├── dynamodb.tf
+│   │   └── pinecone.tf             # 9 DynamoDB tables
+│   └── scripts/                    # Deployment & utilities
+│       ├── build-lambda.sh
+│       └── populate-*.py           # Data seeding scrips
 ```
 
 ## Getting Started
@@ -133,13 +142,14 @@ terraform apply -auto-approve
 ```
 
 This creates:
-- Cognito User Pool for authentication
-- S3 bucket for image storage
-- Lambda functions for skin analysis and AI agents
-- API Gateway with Cognito authorizer
-- DynamoDB tables for data persistence
-- IAM roles and CloudWatch logs
-- OpenAI API key stored in Secrets Manager
+- **Cognito User Pool** for authentication
+- **S3 bucket** for image storage (with 90-day lifecycle)
+- **5 Lambda functions** for skin analysis, chatbot, insights, and agents
+- **2 API Gateway instances** with Cognito authorizer
+- **9 DynamoDB tables** (analyses, products, chat-history, educational-content, daily-insights, checkin-responses, product-applications, and more)
+- **IAM roles** with Bedrock and DynamoDB permissions
+- **CloudWatch logs** with 14-day retention
+- **Secrets Manager** for Pinecone and OpenAI API keys
 
 Deployment time: 5-7 minutes
 
@@ -165,7 +175,7 @@ Provision a Hugging Face Inference Endpoint (or compatible hosted model) for the
 
 The app uses AWS Cognito for API authentication with automatic demo user login:
 
-- **Demo Credentials**: Hardcoded in `CognitoAuthService.swift`
+- **Demo Credentials**: Hardcoded in `CognitoAuthService.swift` for now
 - **User Pool ID**: us-east-1_NBBGEaCAW
 - **App Client ID**: 6kf024iqqn4hqopqn72hsvlmr7
 - **Token Expiry**: 1 hour with automatic refresh
@@ -174,37 +184,40 @@ All users share the same demo account for evaluation purposes. Each API request 
 
 ### API Endpoints
 
-All endpoints require Cognito authentication:
+All endpoints require Cognito authentication (except Learning Hub chat).
 
-**Upload Image**:
+#### Skin Analysis
 ```
-POST /dev/upload-image
-Authorization: <cognito-id-token>
-Returns: { "analysis_id": "...", "upload_url": "..." }
-```
-
-**Get Analysis Results**:
-```
-GET /dev/analysis/{analysis_id}
-Authorization: <cognito-id-token>
-Returns: Analysis results with metrics and recommendations
+POST /dev/upload-image                    # Request presigned upload URL
+GET  /dev/analysis/{id}                   # Poll for analysis results
+GET  /dev/products/recommendations        # Get product recommendations
 ```
 
-**Skin Analyst Agent**:
+#### Learning Hub (Bedrock Claude 3.5 + RAG)
 ```
-POST /dev/agent-chat/skin-analyst
-Authorization: <cognito-id-token>
-Body: { "analysisId": "...", "message": "..." }
-Returns: { "success": true, "data": { "response": "...", "model": "gpt-4o" } }
+POST /dev/learning-hub/chat               # Send chat message
+GET  /dev/learning-hub/chat-history       # Get conversation history
+GET  /dev/learning-hub/recommendations    # Personalized articles
+GET  /dev/learning-hub/articles           # Browse educational content
+GET  /dev/learning-hub/suggestions        # Autocomplete suggestions
+POST /dev/learning-hub/routines/generate  # Generate skincare routine
 ```
 
-**Routine Coach Agent**:
+#### Daily Insights (Multi-Agent)
 ```
-POST /dev/agent-chat/routine-coach
-Authorization: <cognito-id-token>
-Body: { "analysisId": "...", "message": "..." }
-Returns: { "success": true, "data": { "response": "...", "model": "gpt-4o" } }
+POST /dev/daily-insights/generate         # Generate daily insight
+GET  /dev/daily-insights/latest           # Get today's insight
+POST /dev/daily-insights/checkin          # Submit check-in response
+POST /dev/daily-insights/products/apply   # Track product usage
 ```
+
+#### Agent Chat (GPT-4o)
+```
+POST /dev/agent-chat/skin-analyst         # Skin analysis conversation
+POST /dev/agent-chat/routine-coach        # Routine coaching
+```
+
+**Total: 16 API endpoints** - See `docs/BACKEND_INFRASTRUCTURE.md` for complete API reference with request/response examples.
 
 ## Architecture
 
@@ -358,18 +371,27 @@ print(json.loads(response['Payload'].read()))
 - Full data deletion available in Settings
 - OpenAI API calls do not train models (zero data retention)
 
-## Migration Notes
+## Recent Updates
 
-Version 2.0.0 migrates from AWS Bedrock Agents to OpenAI GPT-4o:
-- 500x rate limit improvement (1 RPM to 500 RPM)
-- Direct HTTP API integration (no SDK dependencies)
-- Same RAG/Pinecone knowledge base preserved
-- No iOS app code changes required
+**Version 2.0.0** - Hybrid AI Architecture:
+- **Learning Hub**: AWS Bedrock Claude 3.5 Sonnet v2 with RAG
+- **Agent Chat**: OpenAI GPT-4o for conversational agents
+- **Daily Insights**: Multi-agent orchestration with weather & location context
+- **Infrastructure**: 9 DynamoDB tables for comprehensive data tracking
+- **Documentation**: Complete API reference in `docs/` folder
 
-## Future enhancement 
-- Implement login functionality to provide a more personalized experience.
-- Collect and incorporate user feedback to continuously improve app features and usability.
-- Enhance observability for developers by integrating CloudWatch metrics. This includes analysis metrics, user feedback metrics, and visualizing thumbs‑up/thumbs-down interactions as time-series data.
+**Migration from Bedrock Agents to Hybrid Model**:
+- Learning Hub chatbot uses Bedrock Claude 3.5 (cost-effective, RAG-enhanced)
+- Agent Chat uses GPT-4o (500 RPM rate limit, superior for insights)
+- Smart fallbacks: Chatbot works offline with condition-based responses
+- Same Pinecone knowledge base across all AI features
+
+## Future Enhancements
+- Implement user accounts and authentication for personalized experiences
+- Add user feedback collection (thumbs up/down on recommendations)
+- Enhanced analytics dashboard with user engagement metrics
+- Multi-language support for global accessibility
+- Integration with wearables for holistic skin health tracking
 
 ## Authors
 
@@ -379,17 +401,21 @@ San Jose State University, Fall 2025
 
 ## Support
 
-- Check AWS CloudWatch logs for backend debugging
-- Monitor OpenAI usage at https://platform.openai.com/usage
-- Create an issue in the repository for technical questions
+- **Backend Issues**: Check `docs/BACKEND_INFRASTRUCTURE.md#troubleshooting`
+- **AWS Logs**: AWS CloudWatch logs for each Lambda function
+- **OpenAI Usage**: https://platform.openai.com/usage
+- **Bedrock Usage**: AWS Console → Bedrock → Model invocations
+- **Issues**: Create an issue in the repository
 
 ## Acknowledgments
 
-- OpenAI GPT-4o for conversational AI agents
-- AWS Services (Lambda, Cognito, S3, DynamoDB, API Gateway)
-- Pinecone for vector database
-- SwiftUI and SwiftData frameworks
-- SF Symbols
+- **AWS Bedrock** - Claude 3.5 Sonnet v2 for Learning Hub chatbot
+- **OpenAI** - GPT-4o for conversational AI agents
+- **AWS Services** - Lambda, Cognito, S3, DynamoDB, API Gateway, Bedrock
+- **Pinecone** - Vector database for RAG knowledge base
+- **Hugging Face** - Skin condition ML model
+- **Apple** - SwiftUI, SwiftData, SF Symbols
+- **Terraform** - Infrastructure as Code
 
 ---
 
