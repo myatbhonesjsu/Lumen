@@ -57,7 +57,7 @@ The model also gives **personalized skincare advice** based on the detected cond
 ##  Results
 - **Model Accuracy:** ≈ 98 % (Weighted Avg)  
 - **Strong Predictions:** Acne, Wrinkles, Dark Spots  
-- **Visualization:** Grad-CAM heatmaps highlight model attention on actual skin issues.
+  
 
 ---
 
