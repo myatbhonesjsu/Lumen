@@ -28,7 +28,6 @@ The model also gives **personalized skincare advice** based on the detected cond
 - **Google Colab GPU Runtime** — for training and inference  
 - **Matplotlib & Seaborn** — for result visualization and confusion matrices  
 - **Kaggle API & Roboflow Datasets** — for dataset download and preprocessing  
-- **Grad-CAM Visualization (added)** — to interpret model focus areas  
 
 ---
 
