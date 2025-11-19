@@ -51,7 +51,9 @@ resource "aws_iam_role_policy" "additional_lambda_policy" {
           aws_dynamodb_table.analyses.arn,
           "${aws_dynamodb_table.analyses.arn}/index/*",
           aws_dynamodb_table.daily_insights.arn,
-          aws_dynamodb_table.checkin_responses.arn
+          aws_dynamodb_table.checkin_responses.arn,
+          aws_dynamodb_table.product_applications.arn,
+          "${aws_dynamodb_table.product_applications.arn}/index/*"
         ]
       },
       {

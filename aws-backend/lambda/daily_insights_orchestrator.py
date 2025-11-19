@@ -659,9 +659,21 @@ def gather_user_context(user_id):
 def fetch_environmental_data(location=None):
     """
     Provide environmental context without external weather services.
-    Returns an empty weather payload while preserving coordinate hints for future integrations.
+    Accepts either a dict with coordinates or a free-form location string.
     """
     if not location:
+        return {'weather': {}}
+
+    # If the app sent a simple city/state string, include it verbatim so downstream
+    # agents can still reference the user's wording even without coordinates.
+    if isinstance(location, str):
+        return {
+            'weather': {},
+            'location_text': location
+        }
+
+    if not isinstance(location, dict):
+        print("ℹ️ Unsupported location payload; skipping weather lookup")
         return {'weather': {}}
 
     latitude = location.get('latitude')
@@ -855,12 +867,14 @@ def submit_checkin_response(user_id, response_data):
     """
     Store user's check-in response
     """
-    response_id = f"{user_id}:{datetime.utcnow().isoformat()}"
+    timestamp = datetime.utcnow().isoformat()
+    response_id = f"{user_id}:{timestamp}"
 
     checkin_responses_table.put_item(
         Item={
             'response_id': response_id,
             'user_id': user_id,
+            'timestamp': timestamp,
             'submitted_at': datetime.utcnow().isoformat(),
             'question': response_data.get('question'),
             'response': response_data.get('response'),

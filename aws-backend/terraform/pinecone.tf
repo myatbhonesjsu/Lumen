@@ -73,6 +73,44 @@ resource "aws_dynamodb_table" "checkin_responses" {
   })
 }
 
+# DynamoDB table for product application tracking
+resource "aws_dynamodb_table" "product_applications" {
+  name         = "${local.prefix}-product-applications"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "application_id"
+
+  attribute {
+    name = "application_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "applied_date"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserDateIndex"
+    hash_key        = "user_id"
+    range_key       = "applied_date"
+    projection_type = "ALL"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  tags = merge(local.common_tags, {
+    Purpose = "Track when users apply recommended products"
+  })
+}
+
 # Outputs
 output "pinecone_secret_arn" {
   description = "ARN of Pinecone API key secret"
@@ -87,4 +125,9 @@ output "daily_insights_table" {
 output "checkin_responses_table" {
   description = "Check-in responses DynamoDB table name"
   value       = aws_dynamodb_table.checkin_responses.name
+}
+
+output "product_applications_table" {
+  description = "Product applications DynamoDB table name"
+  value       = aws_dynamodb_table.product_applications.name
 }
