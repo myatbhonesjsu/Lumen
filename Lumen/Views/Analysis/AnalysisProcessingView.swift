@@ -6,7 +6,10 @@
 //
 
 import SwiftUI
+import UIKit
 import SwiftData
+#if canImport(UIKit)
+#endif
 import Combine
 import Foundation
 
@@ -28,6 +31,8 @@ struct AnalysisProcessingView: View {
 
     @State private var savedMetric: SkinMetric?
     @State private var showFeedbackPopup = false
+    @State private var showSaveSuccessAlert = false
+    @State private var showFeedbackSheet = false
 
     // Handle dismiss: close any sheets first, then dismiss the view
     private func handleDismiss() {
@@ -87,13 +92,23 @@ struct AnalysisProcessingView: View {
                 .padding(.top)
 
                 // Image preview
-                Image(systemName: "photo")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(height: 200)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
-                    .padding(.horizontal)
+                if let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
+                        .padding(.horizontal)
+                } else {
+                    Image(systemName: "photo")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
+                        .padding(.horizontal)
+                }
 
                 // Content
                 ScrollView {
@@ -102,6 +117,26 @@ struct AnalysisProcessingView: View {
                             errorView(error: error)
                         } else if let result = analysisResult {
                             resultsView(result: result)
+                            // Show Save Analysis button only once
+                            Button(action: {
+                                saveAnalysis(result: result)
+                            }) {
+                                Text("Save Analysis")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.yellow)
+                                    .cornerRadius(12)
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                            // Show feedback popup immediately after results
+                            .onAppear {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
+                                    showFeedbackSheet = true
+                                }
+                            }
                         } else {
                             loadingView()
                         }
@@ -112,36 +147,114 @@ struct AnalysisProcessingView: View {
                 Spacer()
             }
         }
-        // Feedback Popup
-        .alert(isPresented: $showFeedbackPopup) {
-            Alert(
-                title: Text("We value your feedback!"),
-                message: Text("Please let us know how we can improve your experience."),
-                primaryButton: .default(Text("Submit"), action: {
-                    if let feedback = analysisResult?.summary {
-                        AWSBackendService.shared.submitFeedback(feedback: feedback) { result in
-                            switch result {
-                            case .success:
-                                print("Feedback submitted successfully.")
-                            case .failure(let error):
-                                print("Failed to submit feedback: \(error.localizedDescription)")
-                            }
+        // Feedback Sheet
+        .sheet(isPresented: $showFeedbackSheet) {
+            VStack(spacing: 24) {
+                Text("How was your analysis experience?")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding(.top, 32)
+                HStack(spacing: 40) {
+                    Button(action: {
+                        sendFeedback(rating: "up")
+                        showFeedbackSheet = false
+                    }) {
+                        VStack {
+                            Image(systemName: "hand.thumbsup.fill")
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(.green)
+                            Text("Thumbs Up")
+                                .font(.headline)
                         }
                     }
-                    showFeedbackPopup = false
-                }),
-                secondaryButton: .cancel(Text("Later"))
-            )
-        }
-        // Trigger feedback popup after analysis results
-        .onAppear {
-            if analysisResult != nil {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    showFeedbackPopup = true
+                    Button(action: {
+                        sendFeedback(rating: "down")
+                        showFeedbackSheet = false
+                    }) {
+                        VStack {
+                            Image(systemName: "hand.thumbsdown.fill")
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(.red)
+                            Text("Thumbs Down")
+                                .font(.headline)
+                        }
+                    }
                 }
+                Spacer()
+            }
+            .padding()
+        }
+        // Trigger feedback sheet after analysis results
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20.0) {
+                showFeedbackSheet = true
             }
         }
+        // Present folder naming sheet when an analysis is saved
+        .sheet(item: $savedMetric) { metric in
+            FolderNamePromptSheet(metric: metric) {
+                // onComplete: dismiss parent view after folder naming
+                savedMetric = nil
+                onDismiss()
+            }
+        }
+        // Show a small confirmation alert after save
+        .alert("Saved", isPresented: $showSaveSuccessAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Analysis saved to your library.")
+        }
+
+        // Debug overlay (visible in DEBUG builds)
+        #if DEBUG
+        .overlay(alignment: .bottomTrailing) {
+            DebugOverlayView(savedMetric: $savedMetric)
+                .padding()
+        }
+        #endif
     }
+
+
+#if DEBUG
+struct DebugOverlayView: View {
+    @Binding var savedMetric: SkinMetric?
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            Text("Auth: \(CognitoAuthService.shared.statusDescription)")
+                .font(.caption2)
+                .foregroundColor(.white)
+
+            if let status = AWSBackendService.lastHTTPStatus {
+                Text("Last HTTP: \(status)")
+                    .font(.caption2)
+                    .foregroundColor(.white)
+            } else {
+                Text("Last HTTP: -")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.7))
+            }
+
+            if let body = AWSBackendService.lastResponseBody {
+                Text(body.prefix(120) + (body.count > 120 ? "…" : ""))
+                    .font(.caption2)
+                    .foregroundColor(.white)
+                    .lineLimit(3)
+            }
+
+            Text("savedMetric: \(savedMetric != nil ? "yes" : "no")")
+                .font(.caption2)
+                .foregroundColor(.white)
+        }
+        .padding(8)
+        .background(Color.black.opacity(0.55))
+        .cornerRadius(8)
+        .frame(maxWidth: 300)
+    }
+}
+#endif
 
     // MARK: - Loading View
 
@@ -195,7 +308,7 @@ struct AnalysisProcessingView: View {
             }
 
             // AI Summary
-            if !result.summary.isEmpty {
+            if let summary = result.summary, !summary.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "sparkles")
@@ -204,7 +317,7 @@ struct AnalysisProcessingView: View {
                             .font(.headline)
                     }
 
-                    Text(result.summary)
+                    Text(summary)
                         .font(.subheadline)
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
@@ -251,20 +364,7 @@ struct AnalysisProcessingView: View {
                 }
             }
 
-            // Save button
-            Button(action: {
-                saveAnalysis(result: result)
-                // Don't call onDismiss() here - let folder prompt handle dismissal
-            }) {
-                Text("Save Analysis")
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.yellow)
-                    .cornerRadius(12)
-            }
-            .padding(.horizontal)
+            // Removed duplicate Save Analysis button
         }
         .padding(.vertical)
     }
@@ -351,7 +451,9 @@ struct AnalysisProcessingView: View {
 
             if let url = URL(string: product.amazonUrl), url.scheme != nil {
                 Button(action: {
-                    // Placeholder action for URL
+                    #if canImport(UIKit)
+                    UIApplication.shared.open(url)
+                    #endif
                 }) {
                     HStack {
                         Text("View on Amazon")
@@ -474,6 +576,20 @@ struct AnalysisProcessingView: View {
         }
 
         return notes
+    }
+
+    // MARK: - Feedback Handler
+
+    private func sendFeedback(rating: String) {
+        let feedbackText = rating == "up" ? "Thumbs Up" : "Thumbs Down"
+        AWSBackendService.shared.submitFeedback(feedback: feedbackText) { result in
+            switch result {
+            case .success:
+                print("Feedback submitted successfully.")
+            case .failure(let error):
+                print("Failed to submit feedback: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

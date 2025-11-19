@@ -6,12 +6,16 @@ Orchestrates skin analysis pipeline with Hugging Face and AWS Bedrock
 import json
 import os
 import boto3
-import requests
 import uuid
-from datetime import datetime
+import time
+import concurrent.futures
+from datetime import datetime, timedelta
 from decimal import Decimal
 import base64
 from io import BytesIO
+
+# CloudWatch client for custom metrics
+cloudwatch = boto3.client('cloudwatch')
 
 # No additional imports needed for basic HuggingFace analysis
 
@@ -25,6 +29,7 @@ opensearch = boto3.client('opensearchserverless')
 ANALYSES_TABLE = os.environ['ANALYSES_TABLE']
 PRODUCTS_TABLE = os.environ['PRODUCTS_TABLE']
 S3_BUCKET = os.environ['S3_BUCKET']
+FEEDBACK_TABLE = os.environ.get('FEEDBACK_TABLE', '')
 HUGGINGFACE_URL = os.environ['HUGGINGFACE_URL']
 BEDROCK_AGENT_ID = os.environ.get('BEDROCK_AGENT_ID', '')
 OPENSEARCH_ENDPOINT = os.environ.get('OPENSEARCH_ENDPOINT', '')
@@ -33,6 +38,7 @@ CUSTOM_MODEL_URL = os.environ.get('CUSTOM_MODEL_URL', '')
 # DynamoDB tables
 analyses_table = dynamodb.Table(ANALYSES_TABLE)
 products_table = dynamodb.Table(PRODUCTS_TABLE)
+feedback_table = dynamodb.Table(FEEDBACK_TABLE) if FEEDBACK_TABLE else None
 
 
 def get_user_id_from_event(event):
@@ -76,6 +82,7 @@ def get_user_id_from_event(event):
         return None
 
 
+# Enhanced logging and error handling for debugging
 def lambda_handler(event, context):
     """
     Main Lambda handler - routes requests based on source
@@ -84,29 +91,46 @@ def lambda_handler(event, context):
     1. S3 upload event (process image)
     2. API Gateway (get presigned URL, query results)
     """
-    print(f"Event: {json.dumps(event)}")
+    try:
+        print(f"Event: {json.dumps(event)}")
 
-    # S3 trigger - process uploaded image
-    if 'Records' in event and event['Records'][0]['eventSource'] == 'aws:s3':
-        return process_s3_upload(event)
+        # S3 trigger - process uploaded image
+        if 'Records' in event and event['Records'][0]['eventSource'] == 'aws:s3':
+            return process_s3_upload(event)
 
-    # API Gateway triggers
-    http_method = event.get('httpMethod', '')
-    path = event.get('path', '')
+        # API Gateway triggers
+        http_method = event.get('httpMethod', '')
+        path = event.get('path', '')
 
-    if http_method == 'POST' and '/upload-image' in path:
-        return handle_upload_request(event)
+        if http_method == 'POST' and '/upload-image' in path:
+            return handle_upload_request(event)
 
-    elif http_method == 'GET' and '/analysis/' in path:
-        return handle_get_analysis(event)
+        elif http_method == 'POST' and '/feedback' in path:
+            return handle_submit_feedback(event)
 
-    elif http_method == 'GET' and '/recommendations' in path:
-        return handle_get_recommendations(event)
+        elif http_method == 'GET' and '/metrics' in path:
+            return handle_get_metrics(event)
 
-    else:
+        elif http_method == 'GET' and '/analysis/' in path:
+            return handle_get_analysis(event)
+
+        elif http_method == 'GET' and '/recommendations' in path:
+            return handle_get_recommendations(event)
+
+        else:
+            print("Error: Endpoint not found")
+            return {
+                'statusCode': 404,
+                'body': json.dumps({'error': 'Endpoint not found'})
+            }
+
+    except Exception as e:
+        print(f"❌ Lambda handler error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
-            'statusCode': 404,
-            'body': json.dumps({'error': 'Endpoint not found'})
+            'statusCode': 500,
+            'body': json.dumps({'error': 'Internal server error'})
         }
 
 
@@ -194,23 +218,62 @@ def process_s3_upload(event):
             return {'statusCode': 400, 'body': 'Invalid S3 key format'}
 
         print(f"User ID: {user_id}, Analysis ID: {analysis_id}")
-        
-        # Get image from S3
-        image_obj = s3.get_object(Bucket=bucket, Key=key)
-        image_bytes = image_obj['Body'].read()
-        
-        # Stage 1: Call Hugging Face for prediction (and optional custom model)
-        print("Stage 1: Calling Hugging Face...")
-        hf_prediction = call_huggingface(image_bytes)
 
+        # Get image from S3
+        try:
+            image_obj = s3.get_object(Bucket=bucket, Key=key)
+            image_bytes = image_obj['Body'].read()
+        except Exception as e:
+            print(f"Error fetching image from S3: {str(e)}")
+            return {'statusCode': 500, 'body': 'Error fetching image from S3'}
+
+        # Stage 1: Call Hugging Face and optional custom model (in parallel)
+        print("Stage 1: Calling Hugging Face and custom model (if configured) in parallel...")
+        hf_prediction = None
         custom_prediction = None
-        if CUSTOM_MODEL_URL:
-            try:
-                print("Stage 1b: Calling custom model...")
-                custom_prediction = call_custom_model(image_bytes)
-            except Exception as e:
-                print(f"Custom model call failed: {str(e)}")
-                custom_prediction = None
+
+        start_stage1 = time.time()
+        # Use ThreadPoolExecutor for I/O-bound HTTP calls
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            futures = {}
+            futures['hf'] = executor.submit(call_huggingface, image_bytes)
+            if CUSTOM_MODEL_URL:
+                # import requests lazily in custom model; ensure it's available
+                futures['custom'] = executor.submit(call_custom_model, image_bytes)
+
+            # Collect results with exception handling
+            for name, fut in futures.items():
+                try:
+                    result = fut.result()
+                    if name == 'hf':
+                        hf_prediction = result
+                    elif name == 'custom':
+                        custom_prediction = result
+                except Exception as e:
+                    print(f"{name} model call failed: {str(e)}")
+                    # continue; prediction variable remains None
+
+        end_stage1 = time.time()
+        stage1_duration = end_stage1 - start_stage1
+        print(f"Stage 1 complete in {stage1_duration:.2f}s (HF: {'yes' if hf_prediction else 'no'}, Custom: {'yes' if custom_prediction else 'no'})")
+
+        # Publish basic timing metric to CloudWatch (non-blocking best-effort)
+        try:
+            cloudwatch.put_metric_data(
+                Namespace='Lumen/Analysis',
+                MetricData=[
+                    {
+                        'MetricName': 'Stage1Duration',
+                        'Value': Decimal(str(stage1_duration)),
+                        'Unit': 'Seconds',
+                        'Dimensions': [
+                            {'Name': 'FunctionName', 'Value': os.environ.get('AWS_LAMBDA_FUNCTION_NAME', 'analyze_skin')}
+                        ]
+                    }
+                ]
+            )
+        except Exception as e:
+            print(f"Failed to publish Stage1Duration metric: {str(e)}")
 
         # Combine predictions (if custom model provided) into a single prediction dict
         prediction = combine_model_predictions([p for p in [hf_prediction, custom_prediction] if p is not None])
@@ -229,26 +292,36 @@ def process_s3_upload(event):
 
         # Stage 3: Get product recommendations
         print("Stage 3: Getting product recommendations...")
-        products = get_product_recommendations(prediction['condition'])
+        try:
+            products = get_product_recommendations(prediction['condition'])
+        except Exception as e:
+            print(f"Error getting product recommendations: {str(e)}")
+            products = []
 
         # Update DynamoDB with results
-        update_analysis_results(
-            analysis_id=analysis_id,
-            user_id=user_id,
-            prediction=prediction,
-            enhanced=enhanced,
-            products=products
-        )
-        
+        try:
+            update_analysis_results(
+                analysis_id=analysis_id,
+                user_id=user_id,
+                prediction=prediction,
+                enhanced=enhanced,
+                products=products
+            )
+        except Exception as e:
+            print(f"Error updating analysis results in DynamoDB: {str(e)}")
+            return {'statusCode': 500, 'body': 'Error updating analysis results'}
+
         print(f"✅ Analysis complete: {analysis_id}")
-        
+
         return {
             'statusCode': 200,
             'body': json.dumps({'analysis_id': analysis_id})
         }
-        
+
     except Exception as e:
         print(f"❌ Error processing image: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
@@ -258,6 +331,11 @@ def process_s3_upload(event):
 def call_huggingface(image_bytes):
     """Call Hugging Face API for skin condition prediction"""
     try:
+        # Import requests here so Lambda can run feedback-only flows without the requests package
+        try:
+            import requests
+        except Exception:
+            raise RuntimeError("requests library is required for Hugging Face calls but is not installed")
         # Prepare multipart form data
         files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
 
@@ -297,6 +375,11 @@ def call_custom_model(image_bytes):
     """Call the user-provided custom model endpoint (expects same kind of response as HF)"""
     if not CUSTOM_MODEL_URL:
         raise RuntimeError("CUSTOM_MODEL_URL not configured")
+
+    try:
+        import requests
+    except Exception:
+        raise RuntimeError("requests library is required for custom model calls but is not installed")
 
     files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
 
@@ -515,10 +598,10 @@ def get_user_analysis_history(user_id, limit=5):
                     'confidence': float(analysis['prediction'].get('confidence', 0)),
                     'date': analysis.get('timestamp', 'Unknown'),
                     'severity': analysis.get('enhanced_analysis', {}).get('severity', 'Unknown')
-                })
-
-        return history
-
+                {
+                        'MetricName': 'Stage1Duration',
+                        'Value': float(stage1_duration),
+                        'Unit': 'Seconds',
     except Exception as e:
         print(f"Error fetching user history: {e}")
         return []
@@ -718,19 +801,32 @@ def handle_get_analysis(event):
     try:
         # Extract analysis_id from path
         path_params = event.get('pathParameters', {})
+        # Helper: convert any float values to Decimal for DynamoDB
+        def _convert_floats(obj):
+            if isinstance(obj, float):
+                return Decimal(str(obj))
+            if isinstance(obj, dict):
+                return {k: _convert_floats(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [_convert_floats(v) for v in obj]
+            return obj
+
+        # Ensure products and enhanced use Decimal for any numeric values
+        safe_products = _convert_floats(products)
+        safe_enhanced = _convert_floats(enhanced) if enhanced else None
         analysis_id = path_params.get('id')
 
         if not analysis_id:
             return {
                 'statusCode': 400,
-                'headers': {'Content-Type': 'application/json'},
+            ':products': safe_products,
                 'body': json.dumps({'error': 'Missing analysis_id'})
             }
 
         # Get authenticated user ID
         user_id = get_user_id_from_event(event)
 
-        if not user_id:
+            update_data[':enhanced'] = safe_enhanced
             return {
                 'statusCode': 401,
                 'headers': {'Content-Type': 'application/json'},
@@ -809,4 +905,170 @@ def decimal_default(obj):
     if isinstance(obj, Decimal):
         return float(obj)
     raise TypeError
+
+
+def handle_submit_feedback(event):
+    """Handle feedback submission from API Gateway: store in DynamoDB feedback table"""
+    try:
+        if not feedback_table:
+            print("❌ FEEDBACK_TABLE not configured in environment")
+            return {'statusCode': 500, 'body': json.dumps({'error': 'Feedback table not configured'})}
+
+        # Get authenticated user ID if available
+        user_id = get_user_id_from_event(event)
+
+        # Parse JSON body
+        body = event.get('body') or '{}'
+        # If body is base64-encoded via proxy, decode
+        if event.get('isBase64Encoded'):
+            try:
+                body = base64.b64decode(body).decode('utf-8')
+            except Exception:
+                pass
+
+        data = json.loads(body)
+        feedback_text = data.get('feedback') or data.get('comment') or ''
+        rating = data.get('rating')
+
+        if not feedback_text and not rating:
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'Missing feedback or rating'})
+            }
+
+        feedback_id = str(uuid.uuid4())
+        timestamp = int(datetime.utcnow().timestamp())
+
+        item = {
+            'feedback_id': feedback_id,
+            'timestamp': timestamp,
+            'feedback': feedback_text,
+            'ttl': timestamp + (90 * 24 * 60 * 60)  # 90 days
+        }
+
+        if user_id:
+            item['user_id'] = user_id
+
+        if rating is not None:
+            item['rating'] = rating
+
+        # Store in DynamoDB
+        feedback_table.put_item(Item=item)
+
+        # Emit custom CloudWatch metric for feedback submission
+        try:
+            cloudwatch.put_metric_data(
+                Namespace='LumenApp',
+                MetricData=[
+                    {
+                        'MetricName': 'FeedbackSubmitted',
+                        'Dimensions': [
+                            {'Name': 'Environment', 'Value': 'dev'}
+                        ],
+                        'Timestamp': datetime.utcnow(),
+                        'Value': 1,
+                        'Unit': 'Count'
+                    }
+                ]
+            )
+        except Exception as e:
+            print(f"Error emitting CloudWatch metric: {e}")
+
+        # Return success
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'message': 'Feedback submitted', 'feedback_id': feedback_id})
+        }
+
+    except Exception as e:
+        print(f"Error submitting feedback: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+
+
+def handle_get_metrics(event):
+    """Return simple metrics for UI: total analyses, total feedback, thumbs up/down counts"""
+    try:
+        # Basic metrics via DynamoDB scans (OK for small datasets; consider CloudWatch or aggregations for scale)
+        metrics = {
+            'total_analyses': 0,
+            'total_feedback': 0,
+            'thumbs_up': 0,
+            'thumbs_down': 0
+        }
+
+        # Total analyses
+        try:
+            resp = analyses_table.scan(Select='COUNT')
+            metrics['total_analyses'] = int(resp.get('Count', 0))
+        except Exception as e:
+            print(f"Error counting analyses: {e}")
+
+        # Total feedback
+        if feedback_table:
+            try:
+                resp = feedback_table.scan(Select='COUNT')
+                metrics['total_feedback'] = int(resp.get('Count', 0))
+
+                # thumbs up / down counts
+                from boto3.dynamodb.conditions import Attr
+                up = feedback_table.scan(Select='COUNT', FilterExpression=Attr('rating').eq('up'))
+                down = feedback_table.scan(Select='COUNT', FilterExpression=Attr('rating').eq('down'))
+                metrics['thumbs_up'] = int(up.get('Count', 0))
+                metrics['thumbs_down'] = int(down.get('Count', 0))
+            except Exception as e:
+                print(f"Error scanning feedback table: {e}")
+
+        # Build a timeseries for the last 24 hours (hourly buckets). Prefer CloudWatch data but fall back to zeros.
+        try:
+            now = datetime.utcnow()
+            start = now - timedelta(hours=24)
+            period = 3600
+
+            series = []
+
+            try:
+                resp = cloudwatch.get_metric_statistics(
+                    Namespace='LumenApp',
+                    MetricName='FeedbackSubmitted',
+                    Dimensions=[{'Name': 'Environment', 'Value': 'dev'}],
+                    StartTime=start,
+                    EndTime=now,
+                    Period=period,
+                    Statistics=['Sum']
+                )
+
+                datapoints = resp.get('Datapoints', [])
+                ts_map = {dp['Timestamp'].replace(tzinfo=None): int(dp.get('Sum', 0)) for dp in datapoints}
+            except Exception as e:
+                print(f"CloudWatch query failed; returning zero-filled series: {e}")
+                ts_map = {}
+
+            cur = start.replace(minute=0, second=0, microsecond=0)
+            while cur <= now:
+                val = ts_map.get(cur, 0)
+                series.append({'timestamp': cur.isoformat() + 'Z', 'value': val})
+                cur = cur + timedelta(seconds=period)
+
+            metrics['timeseries'] = series
+
+        except Exception as e:
+            print(f"Error building timeseries: {e}")
+            # ensure timeseries exists even on error
+            metrics['timeseries'] = []
+
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps(metrics)
+        }
+
+    except Exception as e:
+        print(f"Error getting metrics: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
 

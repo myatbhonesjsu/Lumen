@@ -19,6 +19,11 @@ struct ImprovedHomeView: View {
     @State private var showAnalysis = false
     @State private var showRoutine = false
     @State private var completedToday: Set<String> = []
+    // Metrics UI state
+    @State private var metricsData: LocalMetrics? = nil
+    @State private var isFetchingMetrics: Bool = false
+    @State private var showMetricsError = false
+    @State private var metricsErrorText = ""
 
     var latestMetric: SkinMetric? {
         skinMetrics.first
@@ -52,6 +57,8 @@ struct ImprovedHomeView: View {
                     GreetingHeader(greeting: greeting, userName: userName)
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
+
+                    // metrics button removed from header area (moved to bottom of page)
 
                     // Today's Focus Card
                     TodaysFocusCard(
@@ -97,6 +104,19 @@ struct ImprovedHomeView: View {
                             .padding(.horizontal, 20)
                     }
 
+                    // --- Metrics Button (moved to bottom) ---
+                    Button(action: {}) {
+                        Text("Metrics (Disabled)")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.gray)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    // --- End Metrics Button ---
+
                     Spacer(minLength: 100)
                 }
                 .padding(.top, 16)
@@ -114,6 +134,17 @@ struct ImprovedHomeView: View {
             .sheet(isPresented: $showRoutine) {
                 DailyRoutineView()
             }
+            .sheet(isPresented: $isFetchingMetrics) {
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text("Loading metrics...")
+                }
+                .padding()
+            }
+            .sheet(item: $metricsData) { m in
+                MetricsSheetView(metrics: m)
+            }
         }
     }
 }
@@ -125,10 +156,10 @@ struct GreetingHeader: View {
     let userName: String
 
     var body: some View {
-        HStack {
+        HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(greeting)
-                    .font(.title3)
+                    .font(.subheadline)
                     .foregroundColor(.gray)
 
                 Text(userName)
