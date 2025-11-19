@@ -588,16 +588,6 @@ struct LearningArticleCard: View {
                     .cornerRadius(6)
 
                 Spacer()
-
-                if let matchScore = article.matchScore {
-                    HStack(spacing: 4) {
-                        Image(systemName: "star.fill")
-                            .font(.caption2)
-                        Text("\(matchScore) matches")
-                            .font(.caption2)
-                    }
-                    .foregroundColor(.orange)
-                }
             }
 
             Text(article.title)
