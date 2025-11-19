@@ -1,0 +1,40 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "LumenApp", "FeedbackSubmitted", "Environment", "dev" ]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "us-east-1",
+        "title": "Feedback Submitted (dev)"
+      }
+    }
+  ]
+}
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "LumenApp", "FeedbackSubmitted", "Environment", "dev" ]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "us-east-1",
+        "title": "Feedback Submitted (dev)"
+      }
+    }
+  ]
+}
