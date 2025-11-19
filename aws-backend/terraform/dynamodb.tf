@@ -85,6 +85,39 @@ resource "aws_dynamodb_table" "products" {
   tags = local.common_tags
 }
 
+# Table 3: Feedback (stores user feedback)
+resource "aws_dynamodb_table" "feedback" {
+  name           = "${local.prefix}-feedback"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "feedback_id"
+
+  attribute {
+    name = "feedback_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "timestamp"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name               = "UserTimestampIndex"
+    hash_key           = "user_id"
+    range_key          = "timestamp"
+    projection_type    = "ALL"
+    read_capacity      = 1
+    write_capacity     = 1
+  }
+
+  tags = local.common_tags
+}
+
 # Outputs
 output "dynamodb_analyses_table" {
   description = "Name of analyses DynamoDB table"
@@ -94,5 +127,10 @@ output "dynamodb_analyses_table" {
 output "dynamodb_products_table" {
   description = "Name of products DynamoDB table"
   value       = aws_dynamodb_table.products.name
+}
+
+output "dynamodb_feedback_table" {
+  description = "Name of feedback DynamoDB table"
+  value       = aws_dynamodb_table.feedback.name
 }
 

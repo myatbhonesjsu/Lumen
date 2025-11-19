@@ -29,6 +29,20 @@ resource "aws_api_gateway_resource" "upload" {
   path_part   = "upload-image"
 }
 
+# /feedback endpoint
+resource "aws_api_gateway_resource" "feedback" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_rest_api.main.root_resource_id
+  path_part   = "feedback"
+}
+
+# /metrics endpoint
+resource "aws_api_gateway_resource" "metrics" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_rest_api.main.root_resource_id
+  path_part   = "metrics"
+}
+
 resource "aws_api_gateway_method" "upload_post" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   resource_id   = aws_api_gateway_resource.upload.id
@@ -41,6 +55,40 @@ resource "aws_api_gateway_integration" "upload_lambda" {
   rest_api_id = aws_api_gateway_rest_api.main.id
   resource_id = aws_api_gateway_resource.upload.id
   http_method = aws_api_gateway_method.upload_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.analyze_skin.invoke_arn
+}
+
+resource "aws_api_gateway_method" "feedback_post" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.feedback.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method" "metrics_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.metrics.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "feedback_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.feedback.id
+  http_method = aws_api_gateway_method.feedback_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.analyze_skin.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "metrics_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.metrics.id
+  http_method = aws_api_gateway_method.metrics_get.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -110,46 +158,36 @@ resource "aws_api_gateway_integration" "recommendations_lambda" {
 }
 
 # CORS configuration
-module "cors_upload" {
-  source = "squidfunk/api-gateway-enable-cors/aws"
-  version = "0.3.3"
+## module "cors_upload" {
+##   source = "squidfunk/api-gateway-enable-cors/aws"
+##   version = "0.3.3"
+##
+##   api_id          = aws_api_gateway_rest_api.main.id
+##   api_resource_id = aws_api_gateway_resource.upload.id
+## }
 
-  api_id          = aws_api_gateway_rest_api.main.id
-  api_resource_id = aws_api_gateway_resource.upload.id
-}
+## module "cors_analysis" {
+##   source = "squidfunk/api-gateway-enable-cors/aws"
+##   version = "0.3.3"
+##
+##   api_id          = aws_api_gateway_rest_api.main.id
+##   api_resource_id = aws_api_gateway_resource.analysis_id.id
+## }
 
-module "cors_analysis" {
-  source = "squidfunk/api-gateway-enable-cors/aws"
-  version = "0.3.3"
-
-  api_id          = aws_api_gateway_rest_api.main.id
-  api_resource_id = aws_api_gateway_resource.analysis_id.id
-}
-
-module "cors_recommendations" {
-  source = "squidfunk/api-gateway-enable-cors/aws"
-  version = "0.3.3"
-
-  api_id          = aws_api_gateway_rest_api.main.id
-  api_resource_id = aws_api_gateway_resource.recommendations.id
-}
+## module "cors_recommendations" {
+##   source = "squidfunk/api-gateway-enable-cors/aws"
+##   version = "0.3.3"
+##
+##   api_id          = aws_api_gateway_rest_api.main.id
+##   api_resource_id = aws_api_gateway_resource.recommendations.id
+## }
 
 # Deployment
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
 
   triggers = {
-    redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.upload.id,
-      aws_api_gateway_method.upload_post.id,
-      aws_api_gateway_integration.upload_lambda.id,
-      aws_api_gateway_resource.analysis_id.id,
-      aws_api_gateway_method.analysis_get.id,
-      aws_api_gateway_integration.analysis_lambda.id,
-      aws_api_gateway_resource.recommendations.id,
-      aws_api_gateway_method.recommendations_get.id,
-      aws_api_gateway_integration.recommendations_lambda.id,
-    ]))
+    redeploy = timestamp()
   }
 
   lifecycle {
@@ -159,7 +197,8 @@ resource "aws_api_gateway_deployment" "main" {
   depends_on = [
     aws_api_gateway_integration.upload_lambda,
     aws_api_gateway_integration.analysis_lambda,
-    aws_api_gateway_integration.recommendations_lambda
+    aws_api_gateway_integration.recommendations_lambda,
+    aws_api_gateway_integration.feedback_lambda
   ]
 }
 
@@ -175,24 +214,6 @@ resource "aws_api_gateway_stage" "main" {
 }
 
 # Usage plan for throttling
-resource "aws_api_gateway_usage_plan" "main" {
-  name = "${local.prefix}-usage-plan"
-
-  api_stages {
-    api_id = aws_api_gateway_rest_api.main.id
-    stage  = aws_api_gateway_stage.main.stage_name
-  }
-
-  throttle_settings {
-    burst_limit = 100
-    rate_limit  = 50
-  }
-
-  quota_settings {
-    limit  = 10000
-    period = "DAY"
-  }
-}
 
 # Outputs
 output "api_gateway_url" {

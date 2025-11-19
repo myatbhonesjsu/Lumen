@@ -1,7 +1,8 @@
 # S3 Bucket for storing uploaded skin images
 
 resource "aws_s3_bucket" "images" {
-  bucket = "${local.prefix}-images"
+  # Use account id suffix to reduce chance of global name conflicts
+  bucket = "${local.prefix}-${data.aws_caller_identity.current.account_id}-images"
   tags   = local.common_tags
 }
 
@@ -39,6 +40,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "images" {
   bucket = aws_s3_bucket.images.id
 
   rule {
+    prefix = ""
     id     = "delete-old-images"
     status = "Enabled"
 
