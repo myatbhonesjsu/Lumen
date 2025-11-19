@@ -111,6 +111,72 @@ resource "aws_dynamodb_table" "product_applications" {
   })
 }
 
+# DynamoDB table for chat history (Learning Hub)
+resource "aws_dynamodb_table" "chat_history" {
+  name         = "${local.prefix}-chat-history"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+  range_key    = "timestamp"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "timestamp"
+    type = "N"
+  }
+
+  attribute {
+    name = "session_id"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "SessionIndex"
+    hash_key        = "session_id"
+    range_key       = "timestamp"
+    projection_type = "ALL"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  tags = merge(local.common_tags, {
+    Purpose = "Store Learning Hub chat history"
+  })
+}
+
+# DynamoDB table for educational content (Learning Hub)
+resource "aws_dynamodb_table" "educational_content" {
+  name         = "${local.prefix}-educational-content"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "content_id"
+
+  attribute {
+    name = "content_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "category"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "CategoryIndex"
+    hash_key        = "category"
+    projection_type = "ALL"
+  }
+
+  tags = merge(local.common_tags, {
+    Purpose = "Store educational articles and content"
+  })
+}
+
 # Outputs
 output "pinecone_secret_arn" {
   description = "ARN of Pinecone API key secret"
@@ -130,4 +196,14 @@ output "checkin_responses_table" {
 output "product_applications_table" {
   description = "Product applications DynamoDB table name"
   value       = aws_dynamodb_table.product_applications.name
+}
+
+output "chat_history_table" {
+  description = "Chat history DynamoDB table name"
+  value       = aws_dynamodb_table.chat_history.name
+}
+
+output "educational_content_table" {
+  description = "Educational content DynamoDB table name"
+  value       = aws_dynamodb_table.educational_content.name
 }

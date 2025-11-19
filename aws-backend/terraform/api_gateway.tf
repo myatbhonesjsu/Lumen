@@ -385,6 +385,21 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.agent_chat_routine_coach.id,
       aws_api_gateway_method.agent_chat_routine_coach_post.id,
       aws_api_gateway_integration.agent_chat_routine_coach_lambda.id,
+      aws_api_gateway_resource.learning_hub_articles.id,
+      aws_api_gateway_method.learning_hub_articles_get.id,
+      aws_api_gateway_integration.learning_hub_articles_lambda.id,
+      aws_api_gateway_resource.learning_hub_recommendations.id,
+      aws_api_gateway_method.learning_hub_recommendations_get.id,
+      aws_api_gateway_integration.learning_hub_recommendations_lambda.id,
+      aws_api_gateway_resource.learning_hub_chat.id,
+      aws_api_gateway_method.learning_hub_chat_post.id,
+      aws_api_gateway_integration.learning_hub_chat_lambda.id,
+      aws_api_gateway_resource.learning_hub_chat_history.id,
+      aws_api_gateway_method.learning_hub_chat_history_get.id,
+      aws_api_gateway_integration.learning_hub_chat_history_lambda.id,
+      aws_api_gateway_resource.learning_hub_suggestions.id,
+      aws_api_gateway_method.learning_hub_suggestions_get.id,
+      aws_api_gateway_integration.learning_hub_suggestions_lambda.id,
     ]))
   }
 
@@ -399,7 +414,12 @@ resource "aws_api_gateway_deployment" "main" {
     aws_api_gateway_integration.daily_insights_generate_lambda,
     aws_api_gateway_integration.daily_insights_latest_lambda,
     aws_api_gateway_integration.daily_insights_checkin_lambda,
-    aws_api_gateway_integration.daily_insights_products_apply_lambda
+    aws_api_gateway_integration.daily_insights_products_apply_lambda,
+    aws_api_gateway_integration.learning_hub_articles_lambda,
+    aws_api_gateway_integration.learning_hub_recommendations_lambda,
+    aws_api_gateway_integration.learning_hub_chat_lambda,
+    aws_api_gateway_integration.learning_hub_chat_history_lambda,
+    aws_api_gateway_integration.learning_hub_suggestions_lambda
   ]
 }
 
@@ -432,6 +452,174 @@ resource "aws_api_gateway_usage_plan" "main" {
     limit  = 10000
     period = "DAY"
   }
+}
+
+# /learning-hub endpoints - Educational articles and AI chat
+resource "aws_api_gateway_resource" "learning_hub" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_rest_api.main.root_resource_id
+  path_part   = "learning-hub"
+}
+
+# /learning-hub/articles
+resource "aws_api_gateway_resource" "learning_hub_articles" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.learning_hub.id
+  path_part   = "articles"
+}
+
+resource "aws_api_gateway_method" "learning_hub_articles_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.learning_hub_articles.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "learning_hub_articles_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.learning_hub_articles.id
+  http_method = aws_api_gateway_method.learning_hub_articles_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.learning_hub_chatbot.invoke_arn
+}
+
+# /learning-hub/recommendations
+resource "aws_api_gateway_resource" "learning_hub_recommendations" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.learning_hub.id
+  path_part   = "recommendations"
+}
+
+resource "aws_api_gateway_method" "learning_hub_recommendations_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.learning_hub_recommendations.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "learning_hub_recommendations_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.learning_hub_recommendations.id
+  http_method = aws_api_gateway_method.learning_hub_recommendations_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.learning_hub_chatbot.invoke_arn
+}
+
+# /learning-hub/chat
+resource "aws_api_gateway_resource" "learning_hub_chat" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.learning_hub.id
+  path_part   = "chat"
+}
+
+resource "aws_api_gateway_method" "learning_hub_chat_post" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.learning_hub_chat.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "learning_hub_chat_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.learning_hub_chat.id
+  http_method = aws_api_gateway_method.learning_hub_chat_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.learning_hub_chatbot.invoke_arn
+}
+
+# /learning-hub/chat-history
+resource "aws_api_gateway_resource" "learning_hub_chat_history" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.learning_hub.id
+  path_part   = "chat-history"
+}
+
+resource "aws_api_gateway_method" "learning_hub_chat_history_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.learning_hub_chat_history.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "learning_hub_chat_history_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.learning_hub_chat_history.id
+  http_method = aws_api_gateway_method.learning_hub_chat_history_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.learning_hub_chatbot.invoke_arn
+}
+
+# /learning-hub/suggestions
+resource "aws_api_gateway_resource" "learning_hub_suggestions" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.learning_hub.id
+  path_part   = "suggestions"
+}
+
+resource "aws_api_gateway_method" "learning_hub_suggestions_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.learning_hub_suggestions.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "learning_hub_suggestions_lambda" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.learning_hub_suggestions.id
+  http_method = aws_api_gateway_method.learning_hub_suggestions_get.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.learning_hub_chatbot.invoke_arn
+}
+
+# CORS for Learning Hub endpoints
+module "cors_learning_hub_articles" {
+  source = "squidfunk/api-gateway-enable-cors/aws"
+  version = "0.3.3"
+
+  api_id          = aws_api_gateway_rest_api.main.id
+  api_resource_id = aws_api_gateway_resource.learning_hub_articles.id
+}
+
+module "cors_learning_hub_recommendations" {
+  source = "squidfunk/api-gateway-enable-cors/aws"
+  version = "0.3.3"
+
+  api_id          = aws_api_gateway_rest_api.main.id
+  api_resource_id = aws_api_gateway_resource.learning_hub_recommendations.id
+}
+
+module "cors_learning_hub_chat" {
+  source = "squidfunk/api-gateway-enable-cors/aws"
+  version = "0.3.3"
+
+  api_id          = aws_api_gateway_rest_api.main.id
+  api_resource_id = aws_api_gateway_resource.learning_hub_chat.id
+}
+
+module "cors_learning_hub_chat_history" {
+  source = "squidfunk/api-gateway-enable-cors/aws"
+  version = "0.3.3"
+
+  api_id          = aws_api_gateway_rest_api.main.id
+  api_resource_id = aws_api_gateway_resource.learning_hub_chat_history.id
+}
+
+module "cors_learning_hub_suggestions" {
+  source = "squidfunk/api-gateway-enable-cors/aws"
+  version = "0.3.3"
+
+  api_id          = aws_api_gateway_rest_api.main.id
+  api_resource_id = aws_api_gateway_resource.learning_hub_suggestions.id
 }
 
 # Outputs

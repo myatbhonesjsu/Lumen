@@ -53,7 +53,13 @@ resource "aws_iam_role_policy" "additional_lambda_policy" {
           aws_dynamodb_table.daily_insights.arn,
           aws_dynamodb_table.checkin_responses.arn,
           aws_dynamodb_table.product_applications.arn,
-          "${aws_dynamodb_table.product_applications.arn}/index/*"
+          "${aws_dynamodb_table.product_applications.arn}/index/*",
+          aws_dynamodb_table.chat_history.arn,
+          "${aws_dynamodb_table.chat_history.arn}/index/*",
+          aws_dynamodb_table.educational_content.arn,
+          "${aws_dynamodb_table.educational_content.arn}/index/*",
+          aws_dynamodb_table.products.arn,
+          "${aws_dynamodb_table.products.arn}/index/*"
         ]
       },
       {
@@ -244,5 +250,60 @@ resource "aws_lambda_permission" "allow_bedrock_rag_query_handler" {
   function_name = aws_lambda_function.rag_query_handler.function_name
   principal     = "bedrock.amazonaws.com"
   source_arn    = "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:agent/*"
+}
+
+# Learning Hub Chatbot Lambda
+resource "aws_lambda_function" "learning_hub_chatbot" {
+  filename         = "${path.module}/../lambda/lambda_deployment.zip"
+  function_name    = "${local.prefix}-learning-hub-chatbot"
+  role             = aws_iam_role.additional_lambda_role.arn
+  handler          = "learning_hub_handler.lambda_handler"
+  source_code_hash = filebase64sha256("${path.module}/../lambda/lambda_deployment.zip")
+  runtime          = "python3.11"
+  timeout          = 120  # 2 minutes for Bedrock API calls
+  memory_size      = 512
+
+  environment {
+    variables = {
+      CHAT_HISTORY_TABLE       = aws_dynamodb_table.chat_history.name
+      EDUCATIONAL_CONTENT_TABLE = aws_dynamodb_table.educational_content.name
+      ANALYSES_TABLE           = aws_dynamodb_table.analyses.name
+      PRODUCTS_TABLE           = aws_dynamodb_table.products.name
+      BEDROCK_MODEL_ID         = "anthropic.claude-3-5-sonnet-20241022"
+      LAMBDA_PREFIX            = local.prefix
+      PREFIX                   = local.prefix
+      RAG_LAMBDA_NAME          = "rag-query-handler"
+      AWS_REGION               = data.aws_region.current.name
+    }
+  }
+
+  tags = local.common_tags
+}
+
+# CloudWatch Log Group for Learning Hub Chatbot
+resource "aws_cloudwatch_log_group" "learning_hub_chatbot_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.learning_hub_chatbot.function_name}"
+  retention_in_days = 14
+  tags              = local.common_tags
+}
+
+# Lambda permission for API Gateway to invoke Learning Hub Chatbot
+resource "aws_lambda_permission" "allow_apigateway_learning_hub_chatbot" {
+  statement_id  = "AllowAPIGatewayInvokeLearningHubChatbot"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.learning_hub_chatbot.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
+}
+
+# Output
+output "learning_hub_chatbot_function_name" {
+  description = "Name of the Learning Hub Chatbot Lambda function"
+  value       = aws_lambda_function.learning_hub_chatbot.function_name
+}
+
+output "learning_hub_chatbot_function_arn" {
+  description = "ARN of the Learning Hub Chatbot Lambda function"
+  value       = aws_lambda_function.learning_hub_chatbot.arn
 }
 

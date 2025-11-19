@@ -82,6 +82,7 @@ def lambda_handler(event, context):
     Can be triggered by:
     1. S3 upload event (process image)
     2. API Gateway (get presigned URL, query results)
+    3. Learning Hub endpoints (articles, chat)
     """
     print(f"Event: {json.dumps(event)}")
 
