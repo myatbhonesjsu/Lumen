@@ -300,6 +300,23 @@ xcodebuild test -project Lumen.xcodeproj -scheme Lumen \
   -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
+### UI Tests
+Lumen includes a comprehensive XCUITest suite that automatically validates all major user flows across the app.
+- Onboarding Flow
+- Home Screen Navigation
+- Camera Flow
+- History Tab
+- Learn Tab (Chat / For You / Articles)
+
+```bash
+# Run UI Tests
+xcodebuild test \
+  -project Lumen.xcodeproj \
+  -scheme Lumen \
+  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -only-testing:LumenUITests
+```
+
 ### Backend Updates
 ```bash
 cd aws-backend
