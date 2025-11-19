@@ -367,13 +367,13 @@ Version 2.0.0 migrates from AWS Bedrock Agents to OpenAI GPT-4o:
 - No iOS app code changes required
 
 ## Future enhancement 
-- Implement user login functionality to provide a personalized experience.
+- Implement login functionality to provide a more personalized experience.
 - Collect and incorporate user feedback to continuously improve app features and usability.
-- Enhance observability for developers by integrating CloudWatch metrics, enabling monitoring of app performance and usage patterns. This includes tracking analysis metrics, user feedback, and visualizing thumbs‑up/thumbs-down interactions as time-series data.
+- Enhance observability for developers by integrating CloudWatch metrics. This includes analysis metrics, user feedback metrics, and visualizing thumbs‑up/thumbs-down interactions as time-series data.
 
 ## Authors
 
-Team Derma (Team 10)
+Team Derma (Team 9)
 CMPE 272 - Enterprise Software Platforms
 San Jose State University, Fall 2025
 
