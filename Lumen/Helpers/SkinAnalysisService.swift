@@ -138,16 +138,16 @@ class SkinAnalysisService {
 
     /// Analyzes skin using AWS backend
     /// - Parameters:
-    ///   - image: The skin image to analyze
+    ///   - imageData: The skin image data to analyze
     ///   - onProgress: Progress updates during analysis
     ///   - completion: Called when analysis completes with result
     func analyzeSkin(
-        image: UIImage,
+        imageData: Data,
         onProgress: @escaping (String) -> Void,
         completion: @escaping (Result<AnalysisResult, Error>) -> Void
     ) {
         AWSBackendService.shared.analyzeSkin(
-            image: image,
+            imageData: imageData,
             onProgress: onProgress,
             completion: { result in
                 switch result {
