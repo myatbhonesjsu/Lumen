@@ -9,8 +9,12 @@
 
 // MARK: - Configuration
 enum AWSConfig {
-    static let apiEndpoint = "https://ylt3xkf8mf.execute-api.us-east-1.amazonaws.com/dev"
+    // Updated to the live API Gateway URL (use the one deployed in the new account)
+    static let apiEndpoint = "https://qwfgaxng4a.execute-api.us-east-1.amazonaws.com/dev"
     static let requestTimeout: TimeInterval = 60.0
+    // Optional API key for API Gateway (if your deployment requires an API key)
+    // If you have an API key from Terraform outputs or API Gateway, set it here for local testing.
+    static let apiKey: String? = nil
 
     #if DEBUG
     static let enableLogging = true
@@ -112,6 +116,11 @@ struct AnalysisResponse: Codable, @unchecked Sendable {
 class AWSBackendService {
     static let shared = AWSBackendService()
 
+    // Debugging helpers surfaced to the UI when needed
+    static var lastHTTPStatus: Int? = nil
+    static var lastResponseBody: String? = nil
+    static var lastAnalysisId: String? = nil
+
     private init() {}
 
     // MARK: - Nonisolated Decoding Helpers
@@ -184,8 +193,10 @@ class AWSBackendService {
             return
         }
 
-        var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
-        request.httpMethod = "GET"
+    var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
+    request.httpMethod = "GET"
+    // Attach auth token if available
+    attachAuthIfNeeded(to: &request)
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -225,9 +236,11 @@ class AWSBackendService {
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    // Attach auth token if available
+    attachAuthIfNeeded(to: &request)
 
         let feedbackData = ["feedback": feedback]
         do {
@@ -243,6 +256,10 @@ class AWSBackendService {
                 return
             }
 
+            if let httpResponse = response as? HTTPURLResponse {
+                AWSBackendService.lastHTTPStatus = httpResponse.statusCode
+            }
+
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 completion(.failure(AWSBackendError.uploadFailed("Failed to submit feedback")))
                 return
@@ -253,8 +270,82 @@ class AWSBackendService {
 
         task.resume()
     }
+
+    // MARK: - Fetch simple metrics
+    struct TimePoint: Codable, @unchecked Sendable {
+        let timestamp: String
+        let value: Int
+    }
+
+    struct Metrics: Codable, @unchecked Sendable {
+        let total_analyses: Int
+        let total_feedback: Int
+        let thumbs_up: Int
+        let thumbs_down: Int
+        let timeseries: [TimePoint]?
+    }
+
+    func fetchMetrics(completion: @escaping (Result<Metrics, Error>) -> Void) {
+        guard let url = URL(string: "\(AWSConfig.apiEndpoint)/metrics?timeseries=1") else {
+            completion(.failure(AWSBackendError.invalidURL))
+            return
+        }
+
+        var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
+        request.httpMethod = "GET"
+        attachAuthIfNeeded(to: &request)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(AWSBackendError.networkError(error)))
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(AWSBackendError.analysisFailed("Invalid HTTP response")))
+                return
+            }
+
+            // Record status and body for debugging
+            AWSBackendService.lastHTTPStatus = httpResponse.statusCode
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                AWSBackendService.lastResponseBody = responseString
+            } else {
+                AWSBackendService.lastResponseBody = nil
+            }
+
+            guard (200...299).contains(httpResponse.statusCode), let data = data else {
+                let errorBody = AWSBackendService.lastResponseBody ?? "No body"
+                completion(.failure(AWSBackendError.analysisFailed("HTTP \(httpResponse.statusCode): \(errorBody)")))
+                return
+            }
+
+            do {
+                let decoded = try JSONDecoder().decode(Metrics.self, from: data)
+                completion(.success(decoded))
+            } catch {
+                completion(.failure(AWSBackendError.decodingError(error)))
+            }
+        }.resume()
+    }
     
     // MARK: - Private Methods
+
+    // Attach authorization header when available (Cognito ID token)
+    private func attachAuthIfNeeded(to request: inout URLRequest) {
+        // Prefer Cognito ID token if available
+        if let idToken = CognitoAuthService.shared.getIdToken() {
+            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+            log("Attached Authorization header (Bearer token)")
+            return
+        }
+
+        // Fallback: attach API key header for API Gateway if configured
+        if let key = AWSConfig.apiKey, !key.isEmpty {
+            request.setValue(key, forHTTPHeaderField: "x-api-key")
+            log("Attached x-api-key header for API Gateway")
+        }
+    }
     
     private func requestUploadURL(completion: @escaping (Result<UploadResponse, Error>) -> Void) {
         guard let url = URL(string: "\(AWSConfig.apiEndpoint)/upload-image") else {
@@ -266,6 +357,8 @@ class AWSBackendService {
         var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    // Attach auth token if available
+    attachAuthIfNeeded(to: &request)
 
         log(" Requesting upload URL from: \(url.absoluteString)")
 
@@ -278,14 +371,18 @@ class AWSBackendService {
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 log(" Invalid HTTP response")
+                AWSBackendService.lastHTTPStatus = nil
+                AWSBackendService.lastResponseBody = nil
                 completion(.failure(AWSBackendError.uploadFailed("Invalid response")))
                 return
             }
 
+            AWSBackendService.lastHTTPStatus = httpResponse.statusCode
             log(" HTTP Status Code: \(httpResponse.statusCode)")
 
             // Log response body for debugging
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                AWSBackendService.lastResponseBody = responseString
                 log(" Response: \(responseString)")
             }
 
@@ -298,6 +395,7 @@ class AWSBackendService {
 
             do {
                 let uploadResponse = try self.decodeUploadResponse(from: data)
+                AWSBackendService.lastAnalysisId = uploadResponse.analysis_id
                 log(" Upload URL received: \(uploadResponse.analysis_id)")
                 completion(.success(uploadResponse))
             } catch {
@@ -329,14 +427,20 @@ class AWSBackendService {
                 completion(.failure(AWSBackendError.networkError(error)))
                 return
             }
-            
+
             guard let httpResponse = response as? HTTPURLResponse,
                   (200...299).contains(httpResponse.statusCode) else {
+                if let httpResponse = response as? HTTPURLResponse {
+                    AWSBackendService.lastHTTPStatus = httpResponse.statusCode
+                }
                 log("Upload failed with invalid status code")
                 completion(.failure(AWSBackendError.uploadFailed("Server error")))
                 return
             }
-            
+
+            if let httpResponse = response as? HTTPURLResponse {
+                AWSBackendService.lastHTTPStatus = httpResponse.statusCode
+            }
             log("Image uploaded successfully (\(String(format: "%.1f", duration))s)")
             completion(.success(()))
         }.resume()
@@ -414,8 +518,10 @@ class AWSBackendService {
             return
         }
 
-        var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
-        request.httpMethod = "GET"
+    var request = URLRequest(url: url, timeoutInterval: AWSConfig.requestTimeout)
+    request.httpMethod = "GET"
+    // Attach auth token if available
+    attachAuthIfNeeded(to: &request)
 
         log("GET request: \(url.absoluteString)")
 
@@ -428,14 +534,18 @@ class AWSBackendService {
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 log("Invalid HTTP response")
+                AWSBackendService.lastHTTPStatus = nil
+                AWSBackendService.lastResponseBody = nil
                 completion(.failure(AWSBackendError.analysisFailed("Invalid response")))
                 return
             }
 
+            AWSBackendService.lastHTTPStatus = httpResponse.statusCode
             log("HTTP Status: \(httpResponse.statusCode)")
 
             guard (200...299).contains(httpResponse.statusCode), let data = data else {
                 let errorBody = data.flatMap { String(data: $0, encoding: .utf8) } ?? "No body"
+                AWSBackendService.lastResponseBody = errorBody
                 log("HTTP error \(httpResponse.statusCode): \(errorBody)")
                 completion(.failure(AWSBackendError.analysisFailed("HTTP \(httpResponse.statusCode): \(errorBody)")))
                 return
@@ -444,6 +554,7 @@ class AWSBackendService {
             // Log raw response for debugging in debug builds only
             #if DEBUG
             if let responseString = String(data: data, encoding: .utf8) {
+                AWSBackendService.lastResponseBody = responseString
                 log("Raw API response: \(responseString)")
             }
             #endif
