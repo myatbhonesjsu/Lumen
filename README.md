@@ -11,7 +11,7 @@
 
 ## Overview
 
-Lumen is an AI-powered skincare assistant iOS application that analyzes skin conditions through photos, tracks progress over time, and provides personalized skincare insights and recommendations. The application uses OpenAI GPT-4o for intelligent conversational agents and machine learning for skin condition detection.
+Lumen is an AI-powered skincare assistant iOS application that analyzes skin conditions through photos, tracks progress over time, and provides personalized skincare insights and recommendations. The application uses OpenAI GPT-4o for intelligent agents and machine learning for skin condition detection.
 
 ## Core Features
 
@@ -25,9 +25,8 @@ Lumen is an AI-powered skincare assistant iOS application that analyzes skin con
 ### AI-Powered Features
 1. **Skin Analysis** - ML-based condition detection with dual-model validation
 2. **Learning Hub Chatbot** - RAG-enhanced conversational AI with Bedrock Claude 3.5
-3. **Daily Insights** - Multi-agent orchestrator for personalized tips (weather, location, skin condition)
+3. **Personalized Insights** - GPT-4o powered Skin Analyst and Routine Coach with RAG
 4. **Personalized Routines** - AI-generated morning/evening skincare routines
-5. **Agent Chat** - GPT-4o powered Skin Analyst and Routine Coach
 6. **Knowledge Base** - Pinecone RAG for evidence-based recommendations
 
 ### Data Management
@@ -51,7 +50,7 @@ Lumen is an AI-powered skincare assistant iOS application that analyzes skin con
 - **AI Services**:
   - Hugging Face inference endpoint (skin analysis)
   - AWS Bedrock Claude 3.5 Sonnet v2 (Learning Hub chatbot, daily insights)
-  - OpenAI GPT-4o (agent chat, insights generation)
+  - OpenAI GPT-4o (agent chat responses, insights generation)
 - **RAG**: Pinecone vector database + Bedrock Titan embeddings
 - **Storage**: Amazon S3 (images), DynamoDB (9 tables for analytics, chat, insights)
 - **Infrastructure**: Terraform-managed
@@ -89,8 +88,7 @@ Lumen/
 │   ├── lambda/                     # Lambda functions (5 total)
 │   │   ├── handler.py                              # Skin analysis pipeline
 │   │   ├── learning_hub_handler.py                 # Chatbot & Learning Hub
-│   │   ├── daily_insights_orchestrator.py          # Multi-agent insights
-│   │   ├── personalized_insights_generator.py      # Agent chat (GPT-4o)
+│   │   ├── personalized_insights_generator.py      # Agent responses (GPT-4o)
 │   │   ├── rag_query_handler.py                    # Pinecone RAG queries
 │   │   └── pinecone_http_client.py
 │   ├── terraform/                  # Infrastructure as Code
@@ -203,14 +201,6 @@ GET  /dev/learning-hub/suggestions        # Autocomplete suggestions
 POST /dev/learning-hub/routines/generate  # Generate skincare routine
 ```
 
-#### Daily Insights (Multi-Agent)
-```
-POST /dev/daily-insights/generate         # Generate daily insight
-GET  /dev/daily-insights/latest           # Get today's insight
-POST /dev/daily-insights/checkin          # Submit check-in response
-POST /dev/daily-insights/products/apply   # Track product usage
-```
-
 #### Agent Chat (GPT-4o)
 ```
 POST /dev/agent-chat/skin-analyst         # Skin analysis conversation
@@ -295,11 +285,6 @@ Agent conversation history:
 - Timestamps and agent type
 - Persistent across app sessions
 
-### DailyInsight (SwiftData)
-Daily AI-generated insights:
-- Personalized tips based on recent scans
-- Check-in questions and motivational content
-- Trend analysis and progress tracking
 
 ## Development
 
