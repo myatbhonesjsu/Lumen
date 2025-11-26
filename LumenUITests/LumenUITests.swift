@@ -354,7 +354,9 @@ final class LumenUITests: XCTestCase {
 
         // Back on Home
         let homeHeader = app.staticTexts["Skin Analysis"]
-        XCTAssertTrue(homeHeader.waitForExistence(timeout: 6), "Did not return to Home after closing camera")
+        XCTAssertTrue(homeHeader.waitForExistence(timeout: 6), 
+            "Did not return to Home after closing camera"
+        )
     }
 
 
@@ -401,16 +403,16 @@ final class LumenUITests: XCTestCase {
         if firstEntry.exists {
             firstEntry.tap()
 
-            let detail = app.anyElement(withId: "history.detail.screen")
-            XCTAssertTrue(detail.waitForExistence(timeout: 5), "Detail screen did not appear")
+        let detail = app.anyElement(withId: "history.detail.screen")
+        XCTAssertTrue(detail.waitForExistence(timeout: 5), "Detail screen did not appear")
 
-            // Go back if there's a back button
-            app.buttons["Back"].firstMatch.tap()
-            XCTAssertTrue(historyScreen.waitForExistence(timeout: 5))
+        // Go back if there's a back button
+        app.buttons["Back"].firstMatch.tap()
+        XCTAssertTrue(historyScreen.waitForExistence(timeout: 5))
         } else {
             // Verify empty state appears instead
-            let emptyLabel = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'No' OR label CONTAINS[c] 'empty'")).firstMatch
-            XCTAssertTrue(emptyLabel.exists, "Expected empty state in History but nothing found")
+        let emptyLabel = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'No' OR label CONTAINS[c] 'empty'")).firstMatch
+        XCTAssertTrue(emptyLabel.exists, "Expected empty state in History but nothing found")
         }
     }
 
@@ -537,6 +539,7 @@ final class LumenUITests: XCTestCase {
 
     func test_05_Learn_05_ArticleCard_OpensDetail() {
         openLearnFromTabBar()
+        
         let articlesTab = app.buttons["Articles"]
         XCTAssertTrue(
             articlesTab.waitForExistence(timeout: 3),
@@ -544,34 +547,33 @@ final class LumenUITests: XCTestCase {
         )
         articlesTab.tap()
 
-        let articleTitle = "Acne: Diagnosis and Treatment"
-        let articleCard  = app.staticTexts[articleTitle]
+        let articleCard = app.staticTexts
+                .containing(NSPredicate(format: "label CONTAINS[c] 'Skincare Routine'"))
+                .firstMatch
 
         XCTAssertTrue(
-            articleCard.waitForExistence(timeout: 5),
-            "Sample article card '\(articleTitle)' not found on Articles list"
+        articleCard.waitForExistence(timeout: 5),
+            "Sample article card containing 'Skincare Routine' not found on Articles list"
         )
 
+        let articleTitle = articleCard.label
+        XCTAssertFalse(
+            articleTitle.isEmpty,
+            "Sample article card has an empty label — cannot continue test"
+        )
+            
         articleCard.tap()
-
-        // Detail screen title visible
+            
         let detailTitle = app.staticTexts[articleTitle]
-        XCTAssertTrue(
-            detailTitle.waitForExistence(timeout: 5),
+        XCTAssertTrue(detailTitle.waitForExistence(timeout: 5), 
             "Article detail did not open for '\(articleTitle)'"
         )
-
+            
         let readButton = app.buttons["Read Full Article"]
-        XCTAssertTrue(
-            readButton.waitForExistence(timeout: 5),
+        XCTAssertTrue(readButton.waitForExistence(timeout: 5),
             "'Read Full Article' button not visible on article detail"
         )
     }
-    
-    
-    
-    
-    
     
 
     @MainActor
