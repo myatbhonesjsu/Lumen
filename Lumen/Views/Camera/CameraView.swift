@@ -224,18 +224,23 @@ struct CameraView: View {
         }
         .sheet(item: $analysisImageItem) { imageItem in
             NavigationStack {
-                AnalysisProcessingView(
-                    image: imageItem.image,
-                    analysisResult: $analysisResult,
-                    analysisError: $analysisError,
-                    progressMessage: $progressMessage,
-                    onDismiss: {
-                        analysisImageItem = nil
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            dismiss()
+                if let imageData = imageItem.image.jpegData(compressionQuality: 0.8) {
+                    AnalysisProcessingView(
+                        imageData: imageData,
+                        analysisResult: $analysisResult,
+                        analysisError: $analysisError,
+                        progressMessage: $progressMessage,
+                        onDismiss: {
+                            analysisImageItem = nil
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                dismiss()
+                            }
                         }
-                    }
-                )
+                    )
+                } else {
+                    Text("Error: Unable to process image")
+                        .foregroundColor(.red)
+                }
             }
         }
     }
@@ -280,9 +285,15 @@ struct CameraView: View {
         self.analysisImageItem = AnalysisImageItem(image: image)
         HapticManager.shared.success()
 
+        // Convert UIImage to Data
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            self.analysisError = NSError(domain: "CameraView", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to convert image to data"])
+            return
+        }
+
         // Start analysis
         SkinAnalysisService.shared.analyzeSkin(
-            image: image,
+            imageData: imageData,
             onProgress: { message in
                 DispatchQueue.main.async {
                     self.progressMessage = message

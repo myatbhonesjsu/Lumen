@@ -277,12 +277,21 @@ class AWSBackendService {
         let value: Int
     }
 
-    struct Metrics: Codable, @unchecked Sendable {
+    struct Metrics: Codable, @unchecked Sendable, Identifiable {
+        var id: UUID = UUID()
         let total_analyses: Int
         let total_feedback: Int
         let thumbs_up: Int
         let thumbs_down: Int
         let timeseries: [TimePoint]?
+        
+        enum CodingKeys: String, CodingKey {
+            case total_analyses
+            case total_feedback
+            case thumbs_up
+            case thumbs_down
+            case timeseries
+        }
     }
 
     func fetchMetrics(completion: @escaping (Result<Metrics, Error>) -> Void) {

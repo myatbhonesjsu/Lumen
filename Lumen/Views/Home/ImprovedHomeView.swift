@@ -20,7 +20,7 @@ struct ImprovedHomeView: View {
     @State private var showRoutine = false
     @State private var completedToday: Set<String> = []
     // Metrics UI state
-    @State private var metricsData: LocalMetrics? = nil
+    @State private var metricsData: AWSBackendService.Metrics? = nil
     @State private var isFetchingMetrics: Bool = false
     @State private var showMetricsError = false
     @State private var metricsErrorText = ""
@@ -142,7 +142,7 @@ struct ImprovedHomeView: View {
                 }
                 .padding()
             }
-            .sheet(item: $metricsData) { m in
+            .sheet(item: $metricsData) { (m: AWSBackendService.Metrics) in
                 MetricsSheetView(metrics: m)
             }
         }
