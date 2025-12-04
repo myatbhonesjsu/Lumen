@@ -372,7 +372,7 @@ print(json.loads(response['Payload'].read()))
 - Same Pinecone knowledge base across all AI features
 
 ## Future Enhancements
-- Integrating model created under future_scope with existing model from hugging face to enhance the analysis.
+- Integrate model updated under future_scope with the existing model from hugging face to enhance the analysis.
 - Implement user accounts and authentication for personalized experiences
 - Add user feedback collection (thumbs up/down on recommendations)
 - Enhanced analytics dashboard with user engagement metrics
