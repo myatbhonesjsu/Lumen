@@ -372,13 +372,13 @@ print(json.loads(response['Payload'].read()))
 - Same Pinecone knowledge base across all AI features
 
 ## Future Enhancements
-- Integrate model updated under future_scope with the existing model from hugging face to enhance the analysis.
+- Integrate model updated under future_scope with the existing model from hugging face to enhance the analysis
 - Implement user accounts and authentication for personalized experiences
 - Add user feedback collection (thumbs up/down on recommendations)
-- Enhanced analytics dashboard with user engagement metrics
+- Enhanced analytics dashboard with the user engagement metrics
 - Multi-language support for global accessibility
 - Integration with wearables for holistic skin health tracking
-- Add Agentic QA & Testing workflows to automate validation of onboarding, scan flows, AI chat interactions, and recommendation accuracy.
+- Add Agentic QA & Testing workflows to automate validation of onboarding, scan flows, AI chat interactions, and recommendation accuracy
 
 ## Authors
 
